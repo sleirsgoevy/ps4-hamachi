@@ -1,0 +1,163 @@
+extern char _ZNKSbIwSt11char_traitsIwESaIwEE4findEPKwmm[];
+extern char _ZNKSbIwSt11char_traitsIwESaIwEE7compareEPKw[];
+extern char _ZNKSs13find_first_ofEPKcmm[];
+extern char _ZNKSs16find_last_not_ofEPKcmm[];
+extern char _ZNKSs17find_first_not_ofEPKcmm[];
+extern char _ZNKSs4findEPKcm[];
+extern char _ZNKSs4findEPKcmm[];
+extern char _ZNKSs4findEcm[];
+extern char _ZNKSs6substrEmm[];
+extern char _ZNKSs7compareEPKc[];
+extern char _ZNKSs7compareERKSs[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE12_M_leak_hardEv[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_destroyERKS1_[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_disposeERKS1_[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE4_Rep20_S_empty_rep_storageE[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE6assignEPKwm[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE6assignERKS2_[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE6resizeEmw[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEE9_M_mutateEmmm[];
+extern char _ZNSbIwSt11char_traitsIwESaIwEEC1ERKS2_[];
+extern char _ZNSs12_M_leak_hardEv[];
+extern char _ZNSs3endEv[];
+extern char _ZNSs4_Rep10_M_destroyERKSaIcE[];
+extern char _ZNSs4_Rep10_M_disposeERKSaIcE[];
+extern char _ZNSs4_Rep20_S_empty_rep_storageE[];
+extern char _ZNSs6appendEPKc[];
+extern char _ZNSs6appendEPKcm[];
+extern char _ZNSs6appendERKSs[];
+extern char _ZNSs6appendEmc[];
+extern char _ZNSs6assignEPKc[];
+extern char _ZNSs6assignEPKcm[];
+extern char _ZNSs6assignERKSs[];
+extern char _ZNSs6assignERKSsmm[];
+extern char _ZNSs6resizeEmc[];
+extern char _ZNSs7replaceEmmPKcm[];
+extern char _ZNSs7reserveEm[];
+extern char _ZNSs9_M_mutateEmmm[];
+extern char _ZNSs9push_backEc[];
+extern char _ZNSsC1EPKcRKSaIcE[];
+extern char _ZNSsC1EPKcmRKSaIcE[];
+extern char _ZNSsC1ERKSs[];
+extern char _ZNSsC1ERKSsmm[];
+extern char _ZNSsD1Ev[];
+extern char _ZNSt15basic_stringbufIcSt11char_traitsIcESaIcEE7_M_syncEPcmm[];
+extern char _ZNSt19basic_istringstreamIcSt11char_traitsIcESaIcEED1Ev[];
+extern char _ZNSt6localeC1Ev[];
+extern char _ZNSt6localeD1Ev[];
+extern char _ZNSt8__detail15_List_node_base7_M_hookEPS0_[];
+extern char _ZNSt8__detail15_List_node_base9_M_unhookEv[];
+extern char _ZNSt8ios_baseC2Ev[];
+extern char _ZNSt8ios_baseD2Ev[];
+extern char _ZNSt9bad_allocD1Ev[];
+extern char _ZNSt9basic_iosIcSt11char_traitsIcEE4initEPSt15basic_streambufIcS1_E[];
+extern char _ZSt17__throw_bad_allocv[];
+extern char _ZSt18_Rb_tree_decrementPKSt18_Rb_tree_node_base[];
+extern char _ZSt18_Rb_tree_decrementPSt18_Rb_tree_node_base[];
+extern char _ZSt18_Rb_tree_incrementPKSt18_Rb_tree_node_base[];
+extern char _ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base[];
+extern char _ZSt19__throw_logic_errorPKc[];
+extern char _ZSt20__throw_length_errorPKc[];
+extern char _ZSt20__throw_out_of_rangePKc[];
+extern char _ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_[];
+extern char _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_[];
+extern char _ZSt9terminatev[];
+extern char _ZStrsIcSt11char_traitsIcESaIcEERSt13basic_istreamIT_T0_ES7_RSbIS4_S5_T1_E[];
+extern char _ZTISt9bad_alloc[];
+extern char _ZTTSt19basic_istringstreamIcSt11char_traitsIcESaIcEE[];
+extern char _ZTVN10__cxxabiv117__class_type_infoE[];
+extern char _ZTVN10__cxxabiv120__si_class_type_infoE[];
+extern char _ZTVN10__cxxabiv121__vmi_class_type_infoE[];
+extern char _ZTVSt15basic_streambufIcSt11char_traitsIcEE[];
+extern char _ZTVSt15basic_stringbufIcSt11char_traitsIcESaIcEE[];
+extern char _ZTVSt19basic_istringstreamIcSt11char_traitsIcESaIcEE[];
+extern char _ZTVSt9bad_alloc[];
+extern char _ZTVSt9basic_iosIcSt11char_traitsIcEE[];
+extern char _ZdaPv[];
+extern char _ZdlPv[];
+extern char _Znam[];
+extern char _Znwm[];
+struct symbol_desc { const char* name; void* data; int is_fn; };
+struct symbol_desc _start[] = {
+    {"_ZNKSbIwSt11char_traitsIwESaIwEE4findEPKwmm", _ZNKSbIwSt11char_traitsIwESaIwEE4findEPKwmm, 1},
+    {"_ZNKSbIwSt11char_traitsIwESaIwEE7compareEPKw", _ZNKSbIwSt11char_traitsIwESaIwEE7compareEPKw, 1},
+    {"_ZNKSs13find_first_ofEPKcmm", _ZNKSs13find_first_ofEPKcmm, 1},
+    {"_ZNKSs16find_last_not_ofEPKcmm", _ZNKSs16find_last_not_ofEPKcmm, 1},
+    {"_ZNKSs17find_first_not_ofEPKcmm", _ZNKSs17find_first_not_ofEPKcmm, 1},
+    {"_ZNKSs4findEPKcm", _ZNKSs4findEPKcm, 1},
+    {"_ZNKSs4findEPKcmm", _ZNKSs4findEPKcmm, 1},
+    {"_ZNKSs4findEcm", _ZNKSs4findEcm, 1},
+    {"_ZNKSs6substrEmm", _ZNKSs6substrEmm, 1},
+    {"_ZNKSs7compareEPKc", _ZNKSs7compareEPKc, 1},
+    {"_ZNKSs7compareERKSs", _ZNKSs7compareERKSs, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE12_M_leak_hardEv", _ZNSbIwSt11char_traitsIwESaIwEE12_M_leak_hardEv, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_destroyERKS1_", _ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_destroyERKS1_, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_disposeERKS1_", _ZNSbIwSt11char_traitsIwESaIwEE4_Rep10_M_disposeERKS1_, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE4_Rep20_S_empty_rep_storageE", _ZNSbIwSt11char_traitsIwESaIwEE4_Rep20_S_empty_rep_storageE, 0},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE6assignEPKwm", _ZNSbIwSt11char_traitsIwESaIwEE6assignEPKwm, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE6assignERKS2_", _ZNSbIwSt11char_traitsIwESaIwEE6assignERKS2_, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE6resizeEmw", _ZNSbIwSt11char_traitsIwESaIwEE6resizeEmw, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEE9_M_mutateEmmm", _ZNSbIwSt11char_traitsIwESaIwEE9_M_mutateEmmm, 1},
+    {"_ZNSbIwSt11char_traitsIwESaIwEEC1ERKS2_", _ZNSbIwSt11char_traitsIwESaIwEEC1ERKS2_, 1},
+    {"_ZNSs12_M_leak_hardEv", _ZNSs12_M_leak_hardEv, 1},
+    {"_ZNSs3endEv", _ZNSs3endEv, 1},
+    {"_ZNSs4_Rep10_M_destroyERKSaIcE", _ZNSs4_Rep10_M_destroyERKSaIcE, 1},
+    {"_ZNSs4_Rep10_M_disposeERKSaIcE", _ZNSs4_Rep10_M_disposeERKSaIcE, 1},
+    {"_ZNSs4_Rep20_S_empty_rep_storageE", _ZNSs4_Rep20_S_empty_rep_storageE, 0},
+    {"_ZNSs6appendEPKc", _ZNSs6appendEPKc, 1},
+    {"_ZNSs6appendEPKcm", _ZNSs6appendEPKcm, 1},
+    {"_ZNSs6appendERKSs", _ZNSs6appendERKSs, 1},
+    {"_ZNSs6appendEmc", _ZNSs6appendEmc, 1},
+    {"_ZNSs6assignEPKc", _ZNSs6assignEPKc, 1},
+    {"_ZNSs6assignEPKcm", _ZNSs6assignEPKcm, 1},
+    {"_ZNSs6assignERKSs", _ZNSs6assignERKSs, 1},
+    {"_ZNSs6assignERKSsmm", _ZNSs6assignERKSsmm, 1},
+    {"_ZNSs6resizeEmc", _ZNSs6resizeEmc, 1},
+    {"_ZNSs7replaceEmmPKcm", _ZNSs7replaceEmmPKcm, 1},
+    {"_ZNSs7reserveEm", _ZNSs7reserveEm, 1},
+    {"_ZNSs9_M_mutateEmmm", _ZNSs9_M_mutateEmmm, 1},
+    {"_ZNSs9push_backEc", _ZNSs9push_backEc, 1},
+    {"_ZNSsC1EPKcRKSaIcE", _ZNSsC1EPKcRKSaIcE, 1},
+    {"_ZNSsC1EPKcmRKSaIcE", _ZNSsC1EPKcmRKSaIcE, 1},
+    {"_ZNSsC1ERKSs", _ZNSsC1ERKSs, 1},
+    {"_ZNSsC1ERKSsmm", _ZNSsC1ERKSsmm, 1},
+    {"_ZNSsD1Ev", _ZNSsD1Ev, 1},
+    {"_ZNSt15basic_stringbufIcSt11char_traitsIcESaIcEE7_M_syncEPcmm", _ZNSt15basic_stringbufIcSt11char_traitsIcESaIcEE7_M_syncEPcmm, 1},
+    {"_ZNSt19basic_istringstreamIcSt11char_traitsIcESaIcEED1Ev", _ZNSt19basic_istringstreamIcSt11char_traitsIcESaIcEED1Ev, 1},
+    {"_ZNSt6localeC1Ev", _ZNSt6localeC1Ev, 1},
+    {"_ZNSt6localeD1Ev", _ZNSt6localeD1Ev, 1},
+    {"_ZNSt8__detail15_List_node_base7_M_hookEPS0_", _ZNSt8__detail15_List_node_base7_M_hookEPS0_, 1},
+    {"_ZNSt8__detail15_List_node_base9_M_unhookEv", _ZNSt8__detail15_List_node_base9_M_unhookEv, 1},
+    {"_ZNSt8ios_baseC2Ev", _ZNSt8ios_baseC2Ev, 1},
+    {"_ZNSt8ios_baseD2Ev", _ZNSt8ios_baseD2Ev, 1},
+    {"_ZNSt9bad_allocD1Ev", _ZNSt9bad_allocD1Ev, 1},
+    {"_ZNSt9basic_iosIcSt11char_traitsIcEE4initEPSt15basic_streambufIcS1_E", _ZNSt9basic_iosIcSt11char_traitsIcEE4initEPSt15basic_streambufIcS1_E, 1},
+    {"_ZSt17__throw_bad_allocv", _ZSt17__throw_bad_allocv, 1},
+    {"_ZSt18_Rb_tree_decrementPKSt18_Rb_tree_node_base", _ZSt18_Rb_tree_decrementPKSt18_Rb_tree_node_base, 1},
+    {"_ZSt18_Rb_tree_decrementPSt18_Rb_tree_node_base", _ZSt18_Rb_tree_decrementPSt18_Rb_tree_node_base, 1},
+    {"_ZSt18_Rb_tree_incrementPKSt18_Rb_tree_node_base", _ZSt18_Rb_tree_incrementPKSt18_Rb_tree_node_base, 1},
+    {"_ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base", _ZSt18_Rb_tree_incrementPSt18_Rb_tree_node_base, 1},
+    {"_ZSt19__throw_logic_errorPKc", _ZSt19__throw_logic_errorPKc, 1},
+    {"_ZSt20__throw_length_errorPKc", _ZSt20__throw_length_errorPKc, 1},
+    {"_ZSt20__throw_out_of_rangePKc", _ZSt20__throw_out_of_rangePKc, 1},
+    {"_ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_", _ZSt28_Rb_tree_rebalance_for_erasePSt18_Rb_tree_node_baseRS_, 1},
+    {"_ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_", _ZSt29_Rb_tree_insert_and_rebalancebPSt18_Rb_tree_node_baseS0_RS_, 1},
+    {"_ZSt9terminatev", _ZSt9terminatev, 1},
+    {"_ZStrsIcSt11char_traitsIcESaIcEERSt13basic_istreamIT_T0_ES7_RSbIS4_S5_T1_E", _ZStrsIcSt11char_traitsIcESaIcEERSt13basic_istreamIT_T0_ES7_RSbIS4_S5_T1_E, 1},
+    {"_ZTISt9bad_alloc", _ZTISt9bad_alloc, 0},
+    {"_ZTTSt19basic_istringstreamIcSt11char_traitsIcESaIcEE", _ZTTSt19basic_istringstreamIcSt11char_traitsIcESaIcEE, 0},
+    {"_ZTVN10__cxxabiv117__class_type_infoE", _ZTVN10__cxxabiv117__class_type_infoE, 0},
+    {"_ZTVN10__cxxabiv120__si_class_type_infoE", _ZTVN10__cxxabiv120__si_class_type_infoE, 0},
+    {"_ZTVN10__cxxabiv121__vmi_class_type_infoE", _ZTVN10__cxxabiv121__vmi_class_type_infoE, 1},
+    {"_ZTVSt15basic_streambufIcSt11char_traitsIcEE", _ZTVSt15basic_streambufIcSt11char_traitsIcEE, 0},
+    {"_ZTVSt15basic_stringbufIcSt11char_traitsIcESaIcEE", _ZTVSt15basic_stringbufIcSt11char_traitsIcESaIcEE, 0},
+    {"_ZTVSt19basic_istringstreamIcSt11char_traitsIcESaIcEE", _ZTVSt19basic_istringstreamIcSt11char_traitsIcESaIcEE, 0},
+    {"_ZTVSt9bad_alloc", _ZTVSt9bad_alloc, 0},
+    {"_ZTVSt9basic_iosIcSt11char_traitsIcEE", _ZTVSt9basic_iosIcSt11char_traitsIcEE, 0},
+    {"_ZdaPv", _ZdaPv, 1},
+    {"_ZdlPv", _ZdlPv, 1},
+    {"_Znam", _Znam, 1},
+    {"_Znwm", _Znwm, 1},
+    {0, 0, 0},
+};
+char __dso_handle[0] = {};
