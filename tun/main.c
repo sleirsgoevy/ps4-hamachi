@@ -9,6 +9,10 @@
 #include <sys/param.h>
 #include <sys/lock.h>
 #include <sys/mutex.h>
+#include <sys/syscall.h>
+#include <sys/sysent.h>
+#include <sys/sockio.h>
+#include <sys/queue.h>
 #include <machine/atomic.h>
 #include <net/if.h>
 #include <net/if_types.h>
@@ -16,6 +20,7 @@
 #include <sys/systm.h>
 #include <sys/mbuf.h>
 #include <net/netisr.h>
+#include <netinet/in.h>
 #include <stddef.h>
 
 #ifdef PS4
@@ -28,11 +33,14 @@
 
 #ifdef PS4
 #define IF_OUTPUT(x) (*((typeof((x).if_output)*)&(x).if_ioctl))
+#define IF_ADDR_MTX(x) (*((typeof((x).if_addr_mtx)*)(((unsigned long long)&x)+0x4c0)))
 #else
 #define IF_OUTPUT(x) ((x).if_output)
+#define IF_ADDR_MTX(x) ((x).if_addr_mtx)
 #endif
 
 struct malloc_type* get_M_TEMP(void);
+struct sysent* get_sysent(void);
 
 asm("uma_zfree_arg:\nret");
 asm("m_free_ext:\nret");
@@ -41,6 +49,7 @@ asm("m_free_ext:\nret");
 void m_free(struct mbuf*);
 
 static volatile int used[10] = {0};
+static struct ifnet* volatile ifaces[10] = {0};
 
 int acquire_idx(void)
 {
@@ -53,6 +62,25 @@ int acquire_idx(void)
 void release_idx(int i)
 {
     atomic_cmpset_int(used+i, 1, 0);
+}
+
+#define IFACE_ACQUIRED ((struct ifnet*)1)
+
+struct ifnet* acquire_iface(int i)
+{
+    for(;;)
+    {
+        struct ifnet* ans = ifaces[i];
+        if(ans == 0)
+            return 0;
+        if(ans != IFACE_ACQUIRED && atomic_cmpset_ptr((volatile intptr_t*)(ifaces+i), (intptr_t)ans, (intptr_t)IFACE_ACQUIRED))
+            return ans;
+    }
+}
+
+struct ifnet* release_iface(int i, struct ifnet* iface)
+{
+    atomic_store_rel_ptr((volatile intptr_t*)(ifaces+i), (intptr_t)iface);
 }
 
 typedef volatile int tinylock;
@@ -117,6 +145,8 @@ void opaque_free(void* o)
     struct opaque* op = (struct opaque*)o;
     printf("[tun] shutting down...\n");
     mtx_lock(&op->lock);
+    acquire_iface(op->idx);
+    atomic_store_rel_ptr((intptr_t*)(ifaces+op->idx), 0);
     printf("[tun] tun%d: in destructor\n", op->idx);
     soshutdown(op->receiver, SHUT_RDWR);
     printf("[tun] receiver shut down\n");
@@ -181,6 +211,7 @@ struct opaque* opaque_alloc(struct thread* td, int idx)
     op->iface->if_softc = op;
     printf("[tun] tun%d attached!\n", idx);
     tiny_unlock(&op->free_lock);
+    release_iface(idx, op->iface);
     mtx_unlock(&op->lock);
     return op;
 }
@@ -268,6 +299,66 @@ struct cdevsw tun_vtable = {
     .d_name = NULL,
 };
 
+void* p_old_sendto;
+
+int (**get_pp_old_sendto(void))(struct thread*, void*);
+asm("get_pp_old_sendto:\nlea p_old_sendto(%rip), %rax\nret\n");
+
+int (*get_old_sendto(void))(struct thread*, void*)
+{
+    return *get_pp_old_sendto();
+}
+
+void set_old_sendto(int(*f)(struct thread*, void*))
+{
+    *get_pp_old_sendto() = f;
+}
+
+int new_sendto(struct thread* td, void* uap)
+{
+    unsigned long long* params = (unsigned long long*)uap;
+    if(!params[4] || params[5] > 64) // len
+        return get_old_sendto()(td, uap);
+    char buf[64];
+    int rv = copyin((void*)params[4], buf, params[5]);
+    if(rv)
+        return (rv);
+    struct sockaddr_in* sin = (struct sockaddr_in*)buf;
+    if(sin->sin_family != AF_INET || sin->sin_addr.s_addr != INADDR_BROADCAST)
+        return get_old_sendto()(td, uap);
+    int(*sys_ioctl)(struct thread*, void*) = get_sysent()[SYS_ioctl].sy_call;
+    params[4] = (unsigned long long)sin;
+    for(int i = 0; i < 10; i++)
+    {
+        struct ifnet* iface = acquire_iface(i);
+        if(!iface)
+            continue;
+        mtx_lock(&IF_ADDR_MTX(*iface));
+        struct ifaddr* ia;
+        TAILQ_FOREACH(ia, &iface->if_addrhead, ifa_link)
+        {
+#ifdef PS4
+            struct ifaddr* ia2 = *(void**)(((unsigned long long)ia)+208); //wtf is this??
+#else
+            struct ifaddr* ia2 = ia;
+#endif
+            if(!ia2 || !ia2->ifa_broadaddr || ia2->ifa_broadaddr->sa_family != AF_INET)
+            {
+                printf("[tun] tun%d: wtf: invalid address\n", i);
+                continue;
+            }
+            sin->sin_addr = ((struct sockaddr_in*)ia2->ifa_broadaddr)->sin_addr;
+            //printf("[tun] tun%d: broadcast to %08x\n", i, __builtin_bswap32(sin->sin_addr.s_addr));
+            if((rv = get_old_sendto()(td, params)))
+                printf("[tun] tun%d: could not sendto: %d\n", i, rv);
+        }
+        mtx_unlock(&IF_ADDR_MTX(*iface));
+        release_iface(i, iface);
+    }
+    sin->sin_addr.s_addr = INADDR_BROADCAST;
+    return get_old_sendto()(td, params);
+}
+
 int main(struct thread* td)
 {
     printf("[tun] Hello, kernel world!\n");
@@ -291,6 +382,8 @@ int main(struct thread* td)
     tun_vtable.d_ioctl = tun_ioctl;
     tun_vtable.d_poll = tun_poll;
     tun_vtable.d_name = "tun";
+    set_old_sendto(get_sysent()[SYS_sendto].sy_call);
+    get_sysent()[SYS_sendto].sy_call = new_sendto;
     make_dev_p(MAKEDEV_CHECKNAME | MAKEDEV_WAITOK, &tun, &tun_vtable, 0, UID_ROOT, GID_WHEEL, 0600, "tun");
     printf("[tun] Goodbye, kernel world!\n");
     return 0;

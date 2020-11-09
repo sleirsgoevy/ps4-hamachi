@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <signal.h>
 
 int blob_hamachid, blob_cpp_elf;
 
@@ -47,9 +49,7 @@ void* daemon_thread(void* _)
         unlink("/user/home/hamachi/var/run/logmein-hamachi/hamachid.lock");
         pid_t p = my_fork(blob_hamachid, blob_cpp_elf, -1, &master_fd);
         if(!p)
-        { 
             execute(1, "hamachid");
-        }
         char c;
         read(master_fd, &c, 1); // wait for termination
         close(master_fd);

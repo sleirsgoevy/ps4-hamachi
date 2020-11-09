@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+void gui_preinit(void);
 void gui_init(void);
 void gui_show_error_screen(const char*);
 void gui_show_error_dialog(const char*);

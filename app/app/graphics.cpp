@@ -18,19 +18,9 @@ Scene2D::Scene2D(int w, int h, int pixelDepth)
 	this->frameBufferSize = this->width * this->height * this->depth;
 }
 
-bool Scene2D::Init(size_t memSize, int numFrameBuffers)
+bool Scene2D::InitFreeType(void)
 {
 	int rc;
-	
-	this->video = sceVideoOutOpen(ORBIS_VIDEO_USER_MAIN, ORBIS_VIDEO_OUT_BUS_MAIN, 0, 0);
-	this->videoMem = NULL;
-
-	if (this->video < 0)
-	{
-		printf("Failed to open a video out handle: %s\n", strerror(errno));
-		return false;
-	}
-	
 #ifdef GRAPHICS_USES_FONT
 	// Load freetype
 	rc = sceSysmoduleLoadModule(0x009A);
@@ -50,6 +40,21 @@ bool Scene2D::Init(size_t memSize, int numFrameBuffers)
 		return false;
 	}
 #endif
+	return true;
+}
+
+bool Scene2D::Init(size_t memSize, int numFrameBuffers)
+{
+	int rc;
+	
+	this->video = sceVideoOutOpen(ORBIS_VIDEO_USER_MAIN, ORBIS_VIDEO_OUT_BUS_MAIN, 0, 0);
+	this->videoMem = NULL;
+
+	if (this->video < 0)
+	{
+		printf("Failed to open a video out handle: %s\n", strerror(errno));
+		return false;
+	}
 	
 	if(!initFlipQueue())
 	{

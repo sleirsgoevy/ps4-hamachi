@@ -38,6 +38,7 @@ pid_t my_fork(int keep1, int keep2, int keep3, int* master_fd)
         for(int i = 3; i < 10000; i++)
             if(i != keep1 && i != keep2 && i != keep3 && i != magicpipe[0])
                 close(i);
+        setpriority(0, 0, 19);
         return 0;
     }
 }

@@ -198,11 +198,23 @@ mov r11, [rel kernel_base]
 lea r11, [r11+0x3d5380]
 jmp r11
 
+global copyin
+copyin:
+mov r11, [rel kernel_base]
+lea r11, [r11+0x3c17a0]
+jmp r11
+
 global get_M_TEMP
 get_M_TEMP:
 mov rax, [rel kernel_base]
 add rax, 0x1540eb0
 ret 
+
+global get_sysent
+get_sysent:
+mov rax, [rel kernel_base]
+add rax, 0x111e000
+ret
 
 global get_curthread
 get_curthread:

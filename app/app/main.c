@@ -32,14 +32,21 @@ char* concat3(const char* s1, const char* s2, const char* s3)
 
 int main()
 {
-    gui_init();
+    gui_preinit();
     OrbisKernelSwVersion sw_ver;
     sceKernelGetSystemSwVersion(&sw_ver);
     if((sw_ver.i_version & 0xffff0000) != 0x06720000)
+    {
+        gui_init();
         gui_show_error_screen("This program is only for firmware 6.72!"); //noreturn
+    }
     if(init_daemon())
+    {
+        gui_init();
         gui_show_error_screen("Privilege escalation failed. Make sure you are running Mira, not just HEN."); //noreturn
+    }
     start_daemon();
+    gui_init();
     void* buf = 0;
     size_t sz = 0;
     char* errs;

@@ -205,8 +205,19 @@ jmp qword [rel .addr]
 .addr:
 dq 0xffffffff80892200
 
+global copyin
+copyin:
+jmp qword [rel .addr]
+.addr:
+dq 0xffffffff80b16200
+
 global get_M_TEMP
 get_M_TEMP:
 mov rax, 0xffffffff8107cc00
 ret 
+
+global get_sysent
+get_sysent:
+mov rax, 0xffffffff81072280
+ret
 ; ...

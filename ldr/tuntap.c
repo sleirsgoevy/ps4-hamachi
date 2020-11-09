@@ -111,7 +111,6 @@ ssize_t tuntap_read(int fd, char* buf, size_t cnt)
         tuntap_fakepkt_sz = 0;
         return sz;
     }
-skip_packet:;
     ssize_t ans = read(fd, buf, cnt);
     if(ans <= 0)
         return ans;
@@ -149,6 +148,9 @@ skip_packet:;
         ethernet_header(buf, dst_mac, macaddr, 0x0800);
         return ans + 14;
     }
+skip_packet:
+    errno = 11; // linux EAGAIN
+    return -1;
 }
 
 ssize_t tuntap_write(int fd, const char* buf, size_t cnt)

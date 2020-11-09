@@ -268,13 +268,18 @@ static void drawLoginForm(int* ys, int* margins, char** ptrs, int idx)
             drawInput(ys[i], margins[i], ptrs[i]);
 }
 
-extern "C" void gui_init(void)
+extern "C" void gui_preinit(void)
 {
     scene = new Scene2D(1920, 1080, 4);
+    scene->InitFreeType();
+    scene->InitFont(&face, "/app0/font.ttf", 30);
+}
+
+extern "C" void gui_init(void)
+{
     scene->Init(1920*1080*4*2, 2);
     scene->SetActiveFrameBuffer(0);
     scene->FrameBufferClear();
-    scene->InitFont(&face, "/app0/font.ttf", 30);
     int userID;
     OrbisUserServiceInitializeParams param;
     param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;

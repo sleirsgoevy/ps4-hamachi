@@ -57,6 +57,7 @@ public:
 	~Scene2D();
 	
 	bool Init(size_t memSize, int numFrameBuffers);
+	bool InitFreeType(void);
 	
 	void SetActiveFrameBuffer(int index);
 	void SubmitFlip(int frameID);
