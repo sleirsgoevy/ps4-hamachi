@@ -30,15 +30,21 @@ char* concat3(const char* s1, const char* s2, const char* s3)
     return buf;
 }
 
+int is_sw_version_supported(void)
+{
+    OrbisKernelSwVersion sw_ver;
+    sceKernelGetSystemSwVersion(&sw_ver);
+    int ver = sw_ver.i_version >> 16;
+    return ver == 0x672 || ver == 0x702;
+}
+
 int main()
 {
     gui_preinit();
-    OrbisKernelSwVersion sw_ver;
-    sceKernelGetSystemSwVersion(&sw_ver);
-    if((sw_ver.i_version & 0xffff0000) != 0x06720000)
+    if(!is_sw_version_supported())
     {
         gui_init();
-        gui_show_error_screen("This program is only for firmware 6.72!"); //noreturn
+        gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02"); //noreturn
     }
     if(init_daemon())
     {

@@ -55,7 +55,7 @@ static void load_start_module(void* td, struct uap* uap)
     ((void(*)(void*))buf)(td);
 }
 
-void load_tun_tsr(int ver)
+void load_uhack_tsr(int ver)
 {
     kexec(load_start_module, ver);
 }

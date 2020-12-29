@@ -26,7 +26,7 @@ LFLAGS      := -error-limit=0 -m elf_x86_64 -pie --script link.x --eh-frame-hdr 
 
 CFILES      := $(wildcard $(SDIR)/*.c)
 CPPFILES    := $(wildcard $(SDIR)/*.cpp)
-OBJS        := $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(CPPFILES)) ../ldr/ldr ../tun/tunldr.o
+OBJS        := $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(CPPFILES)) ../ldr/ldr ../tun/tunldr.o ../uhack/uhackldr.o
 
 TARGET = eboot.bin
 

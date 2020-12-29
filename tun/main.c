@@ -299,33 +299,20 @@ struct cdevsw tun_vtable = {
     .d_name = NULL,
 };
 
-void* p_old_sendto;
-
-int (**get_pp_old_sendto(void))(struct thread*, void*);
-asm("get_pp_old_sendto:\nlea p_old_sendto(%rip), %rax\nret\n");
-
-int (*get_old_sendto(void))(struct thread*, void*)
-{
-    return *get_pp_old_sendto();
-}
-
-void set_old_sendto(int(*f)(struct thread*, void*))
-{
-    *get_pp_old_sendto() = f;
-}
+int (*p_old_sendto)(struct thread*, void*);
 
 int new_sendto(struct thread* td, void* uap)
 {
     unsigned long long* params = (unsigned long long*)uap;
     if(!params[4] || params[5] > 64) // len
-        return get_old_sendto()(td, uap);
+        return p_old_sendto(td, uap);
     char buf[64];
     int rv = copyin((void*)params[4], buf, params[5]);
     if(rv)
         return (rv);
     struct sockaddr_in* sin = (struct sockaddr_in*)buf;
     if(sin->sin_family != AF_INET || sin->sin_addr.s_addr != INADDR_BROADCAST)
-        return get_old_sendto()(td, uap);
+        return p_old_sendto(td, uap);
     int(*sys_ioctl)(struct thread*, void*) = get_sysent()[SYS_ioctl].sy_call;
     params[4] = (unsigned long long)sin;
     for(int i = 0; i < 10; i++)
@@ -349,14 +336,14 @@ int new_sendto(struct thread* td, void* uap)
             }
             sin->sin_addr = ((struct sockaddr_in*)ia2->ifa_broadaddr)->sin_addr;
             //printf("[tun] tun%d: broadcast to %08x\n", i, __builtin_bswap32(sin->sin_addr.s_addr));
-            if((rv = get_old_sendto()(td, params)))
+            if((rv = p_old_sendto(td, params)))
                 printf("[tun] tun%d: could not sendto: %d\n", i, rv);
         }
         mtx_unlock(&IF_ADDR_MTX(*iface));
         release_iface(i, iface);
     }
     sin->sin_addr.s_addr = INADDR_BROADCAST;
-    return get_old_sendto()(td, params);
+    return p_old_sendto(td, params);
 }
 
 int main(struct thread* td)
@@ -382,7 +369,7 @@ int main(struct thread* td)
     tun_vtable.d_ioctl = tun_ioctl;
     tun_vtable.d_poll = tun_poll;
     tun_vtable.d_name = "tun";
-    set_old_sendto(get_sysent()[SYS_sendto].sy_call);
+    p_old_sendto = get_sysent()[SYS_sendto].sy_call;
     get_sysent()[SYS_sendto].sy_call = new_sendto;
     make_dev_p(MAKEDEV_CHECKNAME | MAKEDEV_WAITOK, &tun, &tun_vtable, 0, UID_ROOT, GID_WHEEL, 0600, "tun");
     printf("[tun] Goodbye, kernel world!\n");

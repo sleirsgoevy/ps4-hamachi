@@ -15,6 +15,7 @@ int blob_hamachid, blob_cpp_elf;
 int jailbreak(void);
 int unchroot(void);
 int maybe_load_tun(void);
+int maybe_load_uhack(void);
 pid_t my_fork(int keep1, int keep2, int keep3, int* masterfd);
 int ldr_main(int argc, const char** argv);
 
@@ -112,6 +113,8 @@ int init_daemon(void)
     dup2(fd, 1);
     dup2(fd, 2);
     if(maybe_load_tun())
+        return -1;
+    if(maybe_load_uhack())
         return -1;
     return 0;
 }
