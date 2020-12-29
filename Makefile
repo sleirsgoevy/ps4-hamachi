@@ -1,4 +1,4 @@
-.PHONY: app blobs ldr pkg tun
+.PHONY: app blobs ldr pkg tun uhack
 
 all: pkg
 
