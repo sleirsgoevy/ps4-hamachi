@@ -184,6 +184,7 @@ struct symbol_desc symbols[] = {
     {"strncpy", strncpy, 1},
     {"strrchr", strrchr, 1},
     {"strstr", strstr, 1},
+    {"strtol", strtol, 1},
     {"system", impl_system, 1},
     {"time", time, 1},
     {"uname", impl_uname, 1},

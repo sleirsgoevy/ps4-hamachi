@@ -69,6 +69,7 @@ musl_strncmp strncmp
 musl_strncpy strncpy
 musl_strrchr strrchr
 musl_strstr strstr
+musl_strtol strtol
 musl_syscall syscall
 musl_time time
 musl_vfprintf vfprintf
