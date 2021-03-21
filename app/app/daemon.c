@@ -13,7 +13,6 @@
 int blob_hamachid, blob_cpp_elf;
 
 int jailbreak(void);
-int unchroot(void);
 int maybe_load_tun(void);
 int maybe_load_uhack(void);
 pid_t my_fork(int keep1, int keep2, int keep3, int* masterfd);
@@ -105,8 +104,6 @@ int init_daemon(void)
     blob_hamachid = open("/app0/hamachid", O_RDONLY);
     blob_cpp_elf = open("/app0/cpp.elf", O_RDONLY);
     if(jailbreak())
-        return -1;
-    if(unchroot())
         return -1;
     int fd = open("/dev/console", O_RDWR);
     dup2(fd, 0);

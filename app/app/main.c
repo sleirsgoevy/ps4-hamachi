@@ -35,7 +35,7 @@ int is_sw_version_supported(void)
     OrbisKernelSwVersion sw_ver;
     sceKernelGetSystemSwVersion(&sw_ver);
     int ver = sw_ver.i_version >> 16;
-    return ver == 0x672 || ver == 0x702;
+    return ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755);
 }
 
 int main()
@@ -44,7 +44,7 @@ int main()
     if(!is_sw_version_supported())
     {
         gui_init();
-        gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02"); //noreturn
+        gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02, 7.5X"); //noreturn
     }
     if(init_daemon())
     {

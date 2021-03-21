@@ -24,7 +24,8 @@ LDIRS       := -L. -L$(TOOLCHAIN)/lib
 CFLAGS      := -cc1 -triple x86_64-pc-freebsd-elf -munwind-tables $(IDIRS) -fuse-init-array -debug-info-kind=limited -debugger-tuning=gdb -emit-obj
 LFLAGS      := -error-limit=0 -m elf_x86_64 -pie --script link.x --eh-frame-hdr $(LDIRS) $(LIBS) $(TOOLCHAIN)/lib/crt1.o
 
-CFILES      := $(wildcard $(SDIR)/*.c)
+CFILES      := $(wildcard $(SDIR)/*.c) $(wildcard $(SDIR)/*/*.c)
+DIRS        := $(patsubst $(SDIR)/%, $(ODIR)/%, $(wildcard $(SDIR)/*/))
 CPPFILES    := $(wildcard $(SDIR)/*.cpp)
 OBJS        := $(patsubst $(SDIR)/%.c, $(ODIR)/%.o, $(CFILES)) $(patsubst $(SDIR)/%.cpp, $(ODIR)/%.o, $(CPPFILES)) ../ldr/ldr ../tun/tunldr.o ../uhack/uhackldr.o
 
@@ -34,11 +35,13 @@ TARGET = eboot.bin
 _unused := $(shell mkdir -p $(INTDIR))
 
 # Make rules
-$(TARGET): $(ODIR) $(OBJS) libc.a libc++.a
-	true $(CPPFILES)
+$(TARGET): mkdir $(ODIR) $(OBJS) libc.a libc++.a
 	$(LD) -o $(ODIR)/$(PROJDIR).elf $(OBJS) $(LFLAGS)
 	python3 fix_entry.py
 	$(TOOLCHAIN)/bin/$(CDIR)/create-eboot -in=$(ODIR)/$(PROJDIR).elf -out=$(ODIR)/$(PROJDIR).oelf --paid 0x3800000000000011
+
+mkdir:
+	mkdir -p $(DIRS)
 
 libc.a: $(TOOLCHAIN)/lib/libc.a renames.txt
 	objcopy --prefix-symbols=musl_ $< $@
