@@ -46,7 +46,7 @@ void* daemon_thread(void* _)
     int master_fd;
     for(;;)
     {
-        unlink("/user/home/hamachi/var/run/logmein-hamachi/hamachid.lock");
+        unlink("/user/app/BREW00179/hamachi/var/run/logmein-hamachi/hamachid.lock");
         pid_t p = my_fork(blob_hamachid, blob_cpp_elf, -1, &master_fd);
         if(!p)
             execute(1, "hamachid");

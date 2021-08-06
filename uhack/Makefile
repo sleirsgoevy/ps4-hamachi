@@ -19,7 +19,7 @@ blob-ps4-%.bin: blob-ps4-%.elf
 	objcopy blob-ps4-$*.elf --only-section .text --only-section .data --only-section .bss --only-section .rodata -O binary blob-ps4-$*.bin
 
 uhackldr.o: uhackldr.c blob-ps4-672.bin blob-ps4-672.elf blob-ps4-702.bin blob-ps4-702.elf blob-ps4-755.bin blob-ps4-755.elf
-	gcc uhackldr.c -ffreestanding -c -o uhackldr.o
+	gcc uhackldr.c -ffreestanding -c -o uhackldr.o -fPIE
 
 clean:
 	rm -f crt.o crt-ps4-*.o blob.elf blob.bin blob-ps4-*.elf blob-ps4-*.bin uhackldr.o

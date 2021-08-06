@@ -20,6 +20,7 @@ musl_gui_init gui_init
 musl_gui_show_error_screen gui_show_error_screen
 musl_inet_addr __inet_addr
 musl__init _init
+musl___libc __libc
 musl___libc_start_main __libc_start_main
 musl_localtime localtime
 musl_memchr memchr
