@@ -17,6 +17,7 @@
     <file targ_path="sce_sys/icon0.png" orig_path="sce_sys/icon0.png" />
     <file targ_path="sce_sys/param.sfo" orig_path="sce_sys/param.sfo" />
     <file targ_path="eboot.bin" orig_path="../app/eboot.bin" />
+    <file targ_path="daemon.sfo" orig_path="../app/daemon.sfo" />
     <file targ_path="sce_sys/about/right.sprx" orig_path="sce_sys/about/right.sprx" />
     <file targ_path="sce_module/libc.prx" orig_path="sce_module/libc.prx" />
     <file targ_path="sce_module/libSceFios2.prx" orig_path="sce_module/libSceFios2.prx" />

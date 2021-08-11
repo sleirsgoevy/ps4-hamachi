@@ -7,26 +7,22 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <netinet/in.h>
 #include <signal.h>
-
-int blob_hamachid, blob_cpp_elf;
 
 int jailbreak(void);
 int maybe_load_tun(void);
 int maybe_load_uhack(void);
-pid_t my_fork(int keep1, int keep2, int keep3, int* masterfd);
+pid_t my_fork(int keep, int* masterfd);
 int ldr_main(int argc, const char** argv);
 
 void vexecute(int argc, va_list va)
 {
-    char dev_fd_1[32], dev_fd_2[32];
-    sprintf(dev_fd_1, "/dev/fd/%d", blob_hamachid);
-    sprintf(dev_fd_2, "/dev/fd/%d", blob_cpp_elf);
     const char* argv[argc + 4];
     argv[0] = "./ldr";
-    argv[1] = dev_fd_1;
-    argv[2] = dev_fd_2;
+    argv[1] = "/mnt/sandbox/BREW00179_000/app0/hamachid";
+    argv[2] = "/mnt/sandbox/BREW00179_000/app0/cpp.elf";
     for(int i = 0; i < argc; i++)
         argv[i + 3] = va_arg(va, const char*);
     argv[argc + 3] = 0;
@@ -41,26 +37,26 @@ void execute(int argc, ...)
     va_end(va);
 }
 
-void* daemon_thread(void* _)
+void daemon_thread(void)
 {
+    int pid_file = open("/mnt/daemons/HOME00179/pid", O_WRONLY|O_CREAT, 0777);
+    if(pid_file >= 0)
+    {
+        pid_t p = getpid();
+        write(pid_file, &p, sizeof(p));
+        close(pid_file);
+    }
     int master_fd;
     for(;;)
     {
-        unlink("/user/app/BREW00179/hamachi/var/run/logmein-hamachi/hamachid.lock");
-        pid_t p = my_fork(blob_hamachid, blob_cpp_elf, -1, &master_fd);
+        unlink("/user/home/hamachi/var/run/logmein-hamachi/hamachid.lock");
+        pid_t p = my_fork(-1, &master_fd);
         if(!p)
             execute(1, "hamachid");
         char c;
         read(master_fd, &c, 1); // wait for termination
         close(master_fd);
     }
-}
-
-void start_daemon(void)
-{
-    //daemon_thread(0);
-    pthread_t shit;
-    pthread_create(&shit, 0, daemon_thread, 0);
 }
 
 void my_popen(void** ptr, size_t* sz, int argc, ...)
@@ -70,7 +66,7 @@ void my_popen(void** ptr, size_t* sz, int argc, ...)
     int master_fd;
     int pipe[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, pipe);
-    pid_t p = my_fork(blob_hamachid, blob_cpp_elf, pipe[1], &master_fd);
+    pid_t p = my_fork(pipe[1], &master_fd);
     if(!p)
     {
         dup2(pipe[1], 1);
@@ -101,8 +97,6 @@ void my_popen(void** ptr, size_t* sz, int argc, ...)
 
 int init_daemon(void)
 {
-    blob_hamachid = open("/app0/hamachid", O_RDONLY);
-    blob_cpp_elf = open("/app0/cpp.elf", O_RDONLY);
     if(jailbreak())
         return -1;
     int fd = open("/dev/console", O_RDWR);

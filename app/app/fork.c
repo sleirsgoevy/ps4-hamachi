@@ -19,7 +19,7 @@ void* watchdog_thread(void* o)
     return 0;
 }
 
-pid_t my_fork(int keep1, int keep2, int keep3, int* master_fd)
+pid_t my_fork(int keep3, int* master_fd)
 {
     int magicpipe[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, magicpipe);
@@ -36,7 +36,7 @@ pid_t my_fork(int keep1, int keep2, int keep3, int* master_fd)
         pthread_t thr;
         pthread_create(&thr, 0, &watchdog_thread, (void*)(intptr_t)magicpipe[0]);
         for(int i = 3; i < 10000; i++)
-            if(i != keep1 && i != keep2 && i != keep3 && i != magicpipe[0])
+            if(i != keep3 && i != magicpipe[0])
                 close(i);
         setpriority(0, 0, 19);
         return 0;

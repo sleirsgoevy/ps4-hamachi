@@ -104,6 +104,7 @@ int load_elf(const char* path, unsigned long long* entry)
             }
         }
     }
+    close(fd);
     unsigned long long dyn_addr = 0;
     unsigned long long dyn_sz = 0;
     for(int i = 0; i < phnum; i++)

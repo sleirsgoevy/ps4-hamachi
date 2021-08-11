@@ -1,6 +1,7 @@
 musl_abort abort
 musl_atoi atoi
 musl_chroot chroot
+musl_closedir closedir
 musl____errno_location ___errno_location
 musl___errno_location __errno_location
 musl_exit exit
@@ -52,6 +53,7 @@ musl_pthread_setspecific pthread_setspecific
 musl_puts puts
 musl_qsort qsort
 musl_rand rand
+musl_readdir readdir
 musl_res_search __res_search
 musl_sceNetGetDnsInfo sceNetGetDnsInfo
 musl_snprintf snprintf
@@ -71,6 +73,7 @@ musl_strncpy strncpy
 musl_strrchr strrchr
 musl_strstr strstr
 musl_strtol strtol
+musl_symlink symlink
 musl_syscall syscall
 musl_time time
 musl_vfprintf vfprintf

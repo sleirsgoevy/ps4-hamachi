@@ -4,11 +4,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <orbis/libkernel.h>
+#include <orbis/Sysmodule.h>
 #include <signal.h>
 #include "gui.h"
 
 int init_daemon(void);
 void start_daemon(void);
+void daemon_thread(void);
 int my_popen(void** buf, size_t* sz, int argc, ...);
 
 int ldr_main(int argc, const char** argv);
@@ -38,20 +40,27 @@ int is_sw_version_supported(void)
     return ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755);
 }
 
-int main()
+int main(int argc, const char** argv)
 {
+    if(argc >= 2 && !strcmp(argv[1], "--daemon"))
+    {
+        sceSysmoduleLoadModuleInternal(0x8000001c); //libSceNet.sprx
+        init_daemon();
+        daemon_thread();
+        return 0;
+    }
     gui_preinit();
     if(!is_sw_version_supported())
     {
         gui_init();
         gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02, 7.5X"); //noreturn
     }
+    start_daemon();
     if(init_daemon())
     {
         gui_init();
         gui_show_error_screen("Privilege escalation failed. Make sure you are running Mira, not just HEN."); //noreturn
     }
-    start_daemon();
     gui_init();
     void* buf = 0;
     size_t sz = 0;
@@ -62,7 +71,7 @@ int main()
     my_popen(&buf, &sz, 2, "hamachi", "login");
     if((errs = error_string(buf, sz)))
         gui_show_error_screen(errs); //noreturn
-    sceKernelUsleep(500000);
+    sceKernelUsleep(1000000);
     buf = 0;
     sz = 0;
     int action, netid = 0;
@@ -93,7 +102,7 @@ int main()
                     free(errs);
                     goto action_fail;
                 }
-                sceKernelUsleep(500000);
+                sceKernelUsleep(1000000);
             }
         }
         else if(action == 2) // join
@@ -118,7 +127,7 @@ int main()
                     free(errs);
                     goto action_fail;
                 }
-                sceKernelUsleep(500000);
+                sceKernelUsleep(1000000);
             }
         }
         else if(action == 3) // delete
@@ -158,7 +167,7 @@ int main()
                 free(errs);
                 goto action_fail;
             }
-            sceKernelUsleep(500000);
+            sceKernelUsleep(1000000);
         }
     action_fail:
         free(netlist);
