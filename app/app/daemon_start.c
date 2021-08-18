@@ -142,17 +142,30 @@ typedef struct LncAppParam
 
 int sceSystemServiceLaunchApp(const char* titleid, const char** argv, LncAppParam*);
 
+int is_daemon_outdated(void)
+{
+    struct stat st1, st2;
+    if(stat("/data/homebrew/" DAEMON_ID "-eboot.bin", &st1)
+    || stat("/user/app/" APP_ID "/app.pkg", &st2))
+        return 1; //assume the worst
+    return st2.st_mtime >= st1.st_mtime;
+}
+
 int start_daemon(void)
 {
     if(jailbreak())
         return 1;
+    int outd = is_daemon_outdated();
     int pid_file = open("/mnt/daemons/" DAEMON_ID "/pid", O_RDONLY);
     if(pid_file >= 0)
     {
-        unlink("/mnt/daemons/" DAEMON_ID "/pid");
         pid_t p;
         read(pid_file, &p, sizeof(p));
         close(pid_file);
+        if(!outd)
+            //keep running old version
+            return -1;
+        unlink("/mnt/daemons/" DAEMON_ID "/pid");
         kill(p, SIGKILL);
     }
     int cnsl = open("/dev/console", O_RDWR);
@@ -170,7 +183,12 @@ int start_daemon(void)
         mkdir("/mnt/daemons/" DAEMON_ID, 0777);
     }
     printf("copying daemon\n");
-    copy_file("/mnt/daemons/" DAEMON_ID "/eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
+    if(outd)
+    {
+        mkdir("/data/homebrew", 0777);
+        copy_file("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
+    }
+    symlink("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/daemons/" DAEMON_ID "/eboot.bin");
     mkdir("/mnt/daemons/" DAEMON_ID "/sce_sys", 0777);
     copy_file("/mnt/daemons/" DAEMON_ID "/sce_sys/param.sfo", "/mnt/sandbox/" APP_ID "_000/app0/daemon.sfo");
     printf("launching daemon\n");

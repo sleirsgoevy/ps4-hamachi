@@ -9,7 +9,7 @@
 #include "gui.h"
 
 int init_daemon(void);
-void start_daemon(void);
+int start_daemon(void);
 void daemon_thread(void);
 int my_popen(void** buf, size_t* sz, int argc, ...);
 
@@ -55,7 +55,12 @@ int main(int argc, const char** argv)
         gui_init();
         gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02, 7.5X"); //noreturn
     }
-    start_daemon();
+    int d_st = start_daemon();
+    if(d_st > 0)
+    {
+        gui_init();
+        gui_show_error_screen("Could not start daemon."); //noreturn
+    }
     if(init_daemon())
     {
         gui_init();
@@ -65,11 +70,14 @@ int main(int argc, const char** argv)
     void* buf = 0;
     size_t sz = 0;
     char* errs;
-    gui_show_status_message("Launching daemon...");
-    sceKernelUsleep(5000000);
+    if(!d_st)
+    {
+        gui_show_status_message("Launching daemon...");
+        sceKernelUsleep(5000000);
+    }
     gui_show_status_message("Logging in...");
     my_popen(&buf, &sz, 2, "hamachi", "login");
-    if((errs = error_string(buf, sz)))
+    if((errs = error_string(buf, sz)) && strcmp(errs, "Already logged in.\n"))
         gui_show_error_screen(errs); //noreturn
     sceKernelUsleep(1000000);
     buf = 0;
