@@ -14,7 +14,8 @@
 int jailbreak(void);
 int maybe_load_tun(void);
 int maybe_load_uhack(void);
-pid_t my_fork(int keep, int* masterfd);
+int my_fork(void);
+void my_exit(int);
 int ldr_main(int argc, const char** argv);
 
 void vexecute(int argc, va_list va)
@@ -26,7 +27,7 @@ void vexecute(int argc, va_list va)
     for(int i = 0; i < argc; i++)
         argv[i + 3] = va_arg(va, const char*);
     argv[argc + 3] = 0;
-    exit(ldr_main(argc + 3, argv));
+    my_exit(ldr_main(argc + 3, argv));
 }
 
 void execute(int argc, ...)
@@ -50,12 +51,9 @@ void daemon_thread(void)
     for(;;)
     {
         unlink("/user/home/hamachi/var/run/logmein-hamachi/hamachid.lock");
-        pid_t p = my_fork(-1, &master_fd);
+        int p = my_fork();
         if(!p)
             execute(1, "hamachid");
-        char c;
-        read(master_fd, &c, 1); // wait for termination
-        close(master_fd);
     }
 }
 
@@ -63,17 +61,19 @@ void my_popen(void** ptr, size_t* sz, int argc, ...)
 {
     va_list va;
     va_start(va, argc);
-    int master_fd;
     int pipe[2];
     socketpair(AF_UNIX, SOCK_STREAM, 0, pipe);
-    pid_t p = my_fork(pipe[1], &master_fd);
+    int out_fd = dup(1);
+    pid_t p = my_fork();
     if(!p)
     {
         dup2(pipe[1], 1);
+        close(pipe[1]);
         vexecute(argc, va);
     }
     va_end(va);
-    close(pipe[1]);
+    dup2(out_fd, 1);
+    close(out_fd);
     char* buf = (char*)*ptr;
     size_t buf_sz = *sz;
     size_t offset = 0;
@@ -92,7 +92,6 @@ void my_popen(void** ptr, size_t* sz, int argc, ...)
     *ptr = buf;
     *sz = offset;
     close(pipe[0]);
-    close(master_fd);
 }
 
 int init_daemon(void)

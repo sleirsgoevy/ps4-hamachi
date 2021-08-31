@@ -11,6 +11,7 @@ musl_fileno fileno
 musl__fini _fini
 musl_fopen fopen
 musl_fork fork
+musl_fprintf fprintf
 musl_fread fread
 musl_freeaddrinfo freeaddrinfo
 musl_fwrite fwrite
@@ -24,6 +25,7 @@ musl__init _init
 musl___libc __libc
 musl___libc_start_main __libc_start_main
 musl_localtime localtime
+musl_longjmp longjmp
 musl_memchr memchr
 musl_memcmp memcmp
 musl_memcpy memcpy
@@ -56,6 +58,7 @@ musl_rand rand
 musl_readdir readdir
 musl_res_search __res_search
 musl_sceNetGetDnsInfo sceNetGetDnsInfo
+musl_setjmp setjmp
 musl_snprintf snprintf
 musl_sprintf sprintf
 musl_sscanf sscanf

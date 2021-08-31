@@ -77,7 +77,7 @@ extern char _ZdaPv[];
 extern char _ZdlPv[];
 extern char _Znam[];
 extern char _Znwm[];
-struct symbol_desc { const char* name; void* data; int is_fn; };
+struct symbol_desc { const char* name; void* data; int is_fn; void* reloc_addr; };
 struct symbol_desc _start[] = {
     {"_ZNKSbIwSt11char_traitsIwESaIwEE4findEPKwmm", _ZNKSbIwSt11char_traitsIwESaIwEE4findEPKwmm, 1},
     {"_ZNKSbIwSt11char_traitsIwESaIwEE7compareEPKw", _ZNKSbIwSt11char_traitsIwESaIwEE7compareEPKw, 1},
