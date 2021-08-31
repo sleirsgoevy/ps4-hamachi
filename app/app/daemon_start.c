@@ -45,7 +45,7 @@ int copy_file(const char* tgt, const char* src)
     int fd1 = open(src, O_RDONLY);
     if(fd1 < 0)
         return -1;
-    int fd2 = open(tgt, O_WRONLY|O_CREAT, 0777);
+    int fd2 = open(tgt, O_WRONLY|O_CREAT|O_TRUNC, 0777);
     if(fd2 < 0)
     {
         close(fd1);
@@ -186,6 +186,7 @@ int start_daemon(void)
     if(outd)
     {
         mkdir("/data/homebrew", 0777);
+        unlink("/data/homebrew/" DAEMON_ID "-eboot.bin");
         copy_file("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
     }
     symlink("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/daemons/" DAEMON_ID "/eboot.bin");
