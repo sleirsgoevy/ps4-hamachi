@@ -13,7 +13,6 @@
 
 int jailbreak(void);
 int maybe_load_tun(void);
-int maybe_load_uhack(void);
 int my_fork(void);
 void my_exit(int);
 int ldr_main(int argc, const char** argv);
@@ -82,7 +81,7 @@ void my_popen(void** ptr, size_t* sz, int argc, ...)
         if(offset == buf_sz)
         {
             buf_sz = 2 * buf_sz + 1;
-            buf = realloc(buf, buf_sz);
+            buf = (char*)realloc(buf, buf_sz);
         }
         size_t chk = read(pipe[0], buf + offset, buf_sz - offset);
         if(chk <= 0)
@@ -103,8 +102,6 @@ int init_daemon(void)
     dup2(fd, 1);
     dup2(fd, 2);
     if(maybe_load_tun())
-        return -1;
-    if(maybe_load_uhack())
         return -1;
     return 0;
 }

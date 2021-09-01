@@ -85,6 +85,7 @@ extern char impl_fileno[];
 extern char impl_fread[];
 extern char impl_fwrite[];
 extern char impl_opendir[];
+extern char impl_strdup[];
 void empty(){}
 unsigned long long zero = 0;
 
@@ -186,7 +187,7 @@ struct symbol_desc symbols[] = {
     {"strchr", strchr, 1},
     {"strcmp", strcmp, 1},
     {"strcpy", strcpy, 1},
-    {"strdup", strdup, 1},
+    {"strdup", impl_strdup, 1},
     {"strerror", strerror, 1},
     {"strlen", strlen, 1},
     {"strncasecmp", strncasecmp, 1},

@@ -1033,3 +1033,11 @@ DIR* impl_opendir(const char* path)
     dbg_printf("opendir(%s)\n", path);
     return 0;
 }
+
+char* impl_strdup(const char* s)
+{
+    size_t l = strlen(s);
+    char* ans = resource_alloc(l+1, res_memory);
+    strncpy(ans, s, l+1);
+    return ans;
+}

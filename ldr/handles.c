@@ -20,6 +20,8 @@ void* resource_alloc(size_t sz, void(*free)(void*))
 {
     LOCK();
     struct Resource* buf = malloc(sz+sizeof(struct Resource));
+    if(list)
+        list->prev = &buf->next;
     buf->magic = MAGIC;
     buf->next = list;
     buf->prev = &list;
@@ -29,15 +31,44 @@ void* resource_alloc(size_t sz, void(*free)(void*))
     return buf + 1;
 }
 
+#if 0
+
+static int check_heap(void* badres)
+{
+    struct Resource** prev = &list;
+    struct Resource* cur = *prev;
+    while(cur)
+    {
+        if((cur + 1) == badres)
+            return 1;
+        if(cur->prev != prev)
+            abort();
+        prev = &cur->next;
+        cur = *prev;
+    }
+    return 0;
+}
+
+#else
+
+#define check_heap(...) 0 && 0
+
+#endif
+
 void* resource_realloc(void* h, size_t new_sz)
 {
     LOCK();
     struct Resource* cur = (struct Resource*)h - 1;
     if(cur->magic != MAGIC)
         abort();
+    if(!check_heap(h))
+        abort();
+    struct Resource* bak = cur;
     cur = realloc(cur, new_sz + sizeof(struct Resource));
     *cur->prev = cur;
     cur->next->prev = &cur->next;
+    if(bak != cur && check_heap(h))
+        abort();
     UNLOCK();
     return cur + 1;
 }
@@ -47,12 +78,16 @@ void resource_free(void* h)
     if(!h)
         return;
     struct Resource* res = (struct Resource*)h - 1;
+    LOCK();
     if(res->magic != MAGIC)
         abort();
-    LOCK();
+    if(!check_heap(h))
+        abort();
     res->free(h);
     *res->prev = res->next;
     res->next->prev = res->prev;
+    if(check_heap(h))
+        abort();
     UNLOCK();
     free(res);
 }
