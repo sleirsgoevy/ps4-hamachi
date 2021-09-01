@@ -1,6 +1,7 @@
 #include <pthread.h>
 #include <sys/types.h>
 #include <stddef.h>
+#include <string.h>
 
 void* musl_malloc(size_t);
 void* musl_realloc(void*, size_t);
@@ -18,7 +19,7 @@ void* malloc(size_t sz)
 {
     //pthread_mutex_lock(&mtx);
     while(__atomic_exchange_n(&mtx, 1, __ATOMIC_ACQUIRE));
-    void* ans = musl_malloc(sz);
+    void** ans = musl_malloc(sz);
     //pthread_mutex_unlock(&mtx);
     __atomic_exchange_n(&mtx, 0, __ATOMIC_RELEASE);
     return ans;

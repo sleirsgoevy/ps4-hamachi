@@ -24,6 +24,7 @@ void* lookup_data(const char* name, void* tgt);
 
 int load_elf(const char* path, unsigned long long* entry)
 {
+    munmap(0, 0x800000000);
     int fd;
     if(!strncmp(path, "/dev/fd/", 8))
     {

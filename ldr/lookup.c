@@ -20,8 +20,10 @@ struct symbol_desc
     const char* name;
     void* value;
     int is_fn;
+    void* reloc_addr;
 };
 
+extern char impl___cxa_atexit[];
 extern char impl___libc_start_main[];
 extern char impl_getenv[];
 extern char impl_malloc[];
@@ -77,11 +79,20 @@ extern char impl_read[];
 extern char impl_write[];
 extern char impl_pthread_mutex_init[];
 extern char impl_gethostname[];
+extern char impl_fclose[];
+extern char impl_fflush[];
+extern char impl_fileno[];
+extern char impl_fread[];
+extern char impl_fwrite[];
+extern char impl_opendir[];
+extern char impl_strdup[];
 void empty(){}
 unsigned long long zero = 0;
 
+FILE** p_stdout = &stdout;
+
 struct symbol_desc symbols[] = {
-    {"__cxa_atexit", empty, 1},
+    {"__cxa_atexit", impl___cxa_atexit, 1},
     {"__errno_location", impl___errno_location, 1},
     {"__fprintf_chk", impl___fprintf_chk, 1},
     {"__fxstat", impl___fxstat64, 1}, // same on x86_64
@@ -107,17 +118,17 @@ struct symbol_desc symbols[] = {
     {"epoll_ctl", impl_epoll_ctl, 1},
     {"epoll_wait", impl_epoll_wait, 1},
     {"exit", impl_exit, 1},
-    {"fclose", fclose, 1},
+    {"fclose", impl_fclose, 1},
     {"fcntl", impl_fcntl, 1},
-    {"fflush", fflush, 1},
-    {"fileno", fileno, 1},
+    {"fflush", impl_fflush, 1},
+    {"fileno", impl_fileno, 1},
     {"flock", flock, 1},
     {"fopen64", impl_fopen64, 1},
-    {"fread", fread, 1},
+    {"fread", impl_fread, 1},
     {"free", impl_free, 1},
     {"freeaddrinfo", impl_freeaddrinfo, 1},
     {"fsync", fsync, 1},
-    {"fwrite", fwrite, 1},
+    {"fwrite", impl_fwrite, 1},
     {"getaddrinfo", impl_getaddrinfo, 1},
     {"getenv", impl_getenv, 1},
     {"gethostname", impl_gethostname, 1},
@@ -146,7 +157,7 @@ struct symbol_desc symbols[] = {
     {"ns_parserr", ns_parserr, 1},
     {"open", impl_open64, 1},
     {"open64", impl_open64, 1},
-    {"opendir", opendir, 1},
+    {"opendir", impl_opendir, 1},
     {"optarg", &zero, 0},
     {"opterr", &zero, 0},
     {"optind", &zero, 0},
@@ -172,11 +183,11 @@ struct symbol_desc symbols[] = {
     {"snprintf", snprintf, 1},
     {"socket", impl_socket, 1},
     {"sscanf", sscanf, 1},
-    {"stdout", &stdout, 0},
+    {"stdout", &p_stdout, 0},
     {"strchr", strchr, 1},
     {"strcmp", strcmp, 1},
     {"strcpy", strcpy, 1},
-    {"strdup", strdup, 1},
+    {"strdup", impl_strdup, 1},
     {"strerror", strerror, 1},
     {"strlen", strlen, 1},
     {"strncasecmp", strncasecmp, 1},
@@ -261,12 +272,14 @@ void* lookup_data(const char* name, void* tgt)
     struct symbol_desc* x = lookup(name);
     if(x && !x->is_fn)
     {
-        if(tgt)
+        if(tgt > (void*)1)
         {
             void* ans = *(void**)x->value;
-            x->value = tgt;
+            x->reloc_addr = tgt;
             return ans;
         }
+        else if(!tgt && x->reloc_addr)
+            return x->reloc_addr;
         else
             return x->value;
     }

@@ -1,5 +1,7 @@
+#define fileno not_fileno
 #include <sys/types.h>
 #include <stdio.h>
+#include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
@@ -17,6 +19,9 @@
 #include <sys/un.h>
 #include <netdb.h>
 #include "linux_structs.h"
+#include "handles.h"
+#undef fileno
+int fileno(FILE*);
 
 #ifdef DEBUG_PRINTS
 #define dbg_printf printf
@@ -25,12 +30,27 @@
 #endif
 
 void impl_exit(int);
+void my_exit(int);
 
 extern int my_argc;
 extern const char** my_argv;
 
+struct atexit_cb
+{
+    void(*f)(void*);
+    void* p;
+};
+
+__thread int is_main_thread;
+
+int impl___cxa_atexit(void(*f)(void*), void* o, void* d)
+{
+    return 0;
+}
+
 void impl___libc_start_main(int(*main)(int, const char**), int _1, void* _2, void(*init)(void), void(*fini)(void), void(*rtld_fini)(void), void* stack_end)
 {
+    is_main_thread = 1;
     init();
     impl_exit(main(my_argc, my_argv));
 }
@@ -41,28 +61,33 @@ const char* impl_getenv(const char* name)
     return 0;
 }
 
+static void res_memory(void* h){}
+
 void* impl_malloc(size_t sz)
 {
-    void* ans = malloc(sz);
+    void* ans = resource_alloc(sz, res_memory);
     //printf("malloc(%lld) = %p\n", sz, ans);
     return ans;
 }
 
 void* impl_realloc(void* ptr, size_t new_sz)
 {
-    void* ans = realloc(ptr, new_sz);
+    void* ans = (ptr ? resource_realloc(ptr, new_sz) : resource_alloc(new_sz, res_memory));
     //printf("realloc(%p, %lld) = %p\n", ptr, new_sz);
     return ans;
 }
 
+void* lookup_data(const char* name, void* zero);
+
 void impl_free(void* ptr)
 {
     //printf("free(%p)\n", ptr);
-    if(ptr != (void*)0x97c4e0 && ptr != (void*)0x600c4520)
-        free(ptr);
+    static void* empty_rep_storage;
+    if(!empty_rep_storage)
+        empty_rep_storage = lookup_data("_ZNSs4_Rep20_S_empty_rep_storageE", (void*)1);
+    if(ptr != (void*)0x97c4e0 && ptr != empty_rep_storage)
+        resource_free(ptr);
 }
-
-void* lookup_data(const char* name, void* zero);
 
 int impl_getopt(int argc, char** argv, const char* optstring)
 {
@@ -109,14 +134,14 @@ int impl___fprintf_chk(FILE* f, int flag, const char* fmt, ...)
 {
     va_list x;
     va_start(x, fmt);
-    int ans = vfprintf(f, fmt, x);
+    int ans = vfprintf(*(FILE**)f, fmt, x);
     va_end(x);
     return ans;
 }
 
 int impl___vfprintf_chk(FILE* f, int flag, const char* fmt, va_list vl)
 {
-    return vfprintf(f, fmt, vl);
+    return vfprintf(*(FILE**)f, fmt, vl);
 }
 
 int impl___vsnprintf_chk(char* s, size_t ml, int f, size_t l, const char* fmt, va_list vl)
@@ -154,8 +179,15 @@ char* impl___strcpy_chk(char* dst, const char* src, size_t dstlen)
 
 void impl_exit(int code)
 {
+    if(!is_main_thread)
+    {
+        dbg_printf("FATAL: exit() not from main thread");
+        abort();
+    }
     dbg_printf("exit(%d)\n", code);
-    exit(code);
+    resource_collect();
+    is_main_thread = 0;
+    my_exit(code);
 }
 
 int impl_getuid(void)
@@ -239,6 +271,13 @@ int impl_mkdir(const char* path, mode_t mode)
     return ans;
 }
 
+static void* per_fd_resources[16384];
+
+static void res_fd(void* p)
+{
+    close(*(int*)p);
+}
+
 int impl_open64(const char* path, int flags, mode_t mode)
 {
     dbg_printf("open64(\"%s\", %d, %d)", path, flags, mode);
@@ -259,6 +298,7 @@ int impl_open64(const char* path, int flags, mode_t mode)
         free(pp);
     }
     dbg_printf(" = %d\n", fd);
+    *(int*)(per_fd_resources[fd] = resource_alloc(sizeof(int), res_fd)) = fd;
     return fd;
 }
 
@@ -291,6 +331,12 @@ int impl_daemon(int nochdir, int noclose)
     return 0;
 }
 
+static void res_file(void* f) {
+    FILE* fp = *(FILE**)f;
+    if(fp)
+        fclose(fp);
+}
+
 FILE* impl_fopen64(const char* path, const char* mode)
 {
     dbg_printf("fopen64(\"%s\", \"%s\")", path, mode);
@@ -304,7 +350,11 @@ FILE* impl_fopen64(const char* path, const char* mode)
         free(pp);
     }
     dbg_printf(" = %p\n", ans);
-    return ans;
+    if(!ans)
+        return 0;
+    void* handle = resource_alloc(sizeof(FILE*), res_file);
+    *(FILE**)handle = ans;
+    return handle;
 }
 
 struct linux_tm* impl_localtime(const time_t* t)
@@ -340,38 +390,45 @@ int impl_unlink(const char* path)
     return ans;
 }
 
-static int have_epoll = 0;
 static fd_set epoll_in;
 static fd_set epoll_out;
 static fd_set epoll_err;
 static linux_epoll_data_t epoll_per_fd_data[FD_SETSIZE];
 
 static int tun_fd = -1;
+static void* epoll_rs;
 
 int impl_close(int fd)
 {
     dbg_printf("close(%d)\n", fd);
-    if(fd == 65536 && have_epoll)
+    if(fd == 65536 && epoll_rs)
     {
-        have_epoll = 0;
+        resource_free(epoll_rs);
         return 0;
     }
     else
     {
         if(fd == tun_fd)
             tun_fd = -1;
+        resource_free(per_fd_resources[fd]);
+        per_fd_resources[fd] = 0;
         return close(fd);
     }
 }
 
+static void res_epoll(void* h)
+{
+    epoll_rs = 0;
+}
+
 int impl_epoll_create(int sz)
 {
-    if(have_epoll)
+    if(epoll_rs)
     {
         dbg_printf("FATAL: epoll_create called twice!\n");
         abort();
     }
-    have_epoll = 1;
+    epoll_rs = resource_alloc(0, res_epoll);
     FD_ZERO(&epoll_in);
     FD_ZERO(&epoll_out);
     FD_ZERO(&epoll_err);
@@ -381,7 +438,7 @@ int impl_epoll_create(int sz)
 int impl_epoll_ctl(int fd, int op, int fd2, struct linux_epoll_event* e)
 {
     dbg_printf("epoll_ctl(%d, %d, %d)\n", fd, op, fd2);
-    if(fd != 65536 || !have_epoll)
+    if(fd != 65536 || !epoll_rs)
     {
         errno = EBADF;
         return -1;
@@ -421,7 +478,7 @@ int tuntap_has_fake_pkt();
 
 int impl_epoll_wait(int fd, struct linux_epoll_event* ee, int maxevents, int timeout)
 {
-    if(fd != 65536 || !have_epoll)
+    if(fd != 65536 || !epoll_rs)
     {
         errno = EBADF;
         return -1;
@@ -473,7 +530,11 @@ int impl_socket(int domain, int type, int protocol)
 {
     if(domain == 10)
         domain = AF_INET6;
-    return socket(domain, type, protocol);
+    int ans = socket(domain, type, protocol);
+    if(ans < 0)
+        return ans;
+    *(int*)(per_fd_resources[ans] = resource_alloc(sizeof(int), res_fd)) = ans;
+    return ans;
 }
 
 union bsd_addr
@@ -768,11 +829,16 @@ struct host_addrinfo {
 	struct host_addrinfo *ai_next;
 };
 
+static void res_addrinfo(void* h)
+{
+    free(((struct linux_addrinfo*)h)->ai_canonname);
+}
+
 void bsd_to_linux_addrinfo(struct host_addrinfo* arg, struct linux_addrinfo** ans)
 {
     while(arg)
     {
-        struct laax* i = malloc(sizeof(*i));
+        struct laax* i = resource_alloc(sizeof(*i), res_addrinfo);
         socklen_t l;
         i->ai.ai_flags = arg->ai_flags;
         i->ai.ai_family = (arg->ai_family==AF_INET6?10:arg->ai_family);
@@ -814,8 +880,7 @@ void impl_freeaddrinfo(struct linux_addrinfo* ai)
     while(ai)
     {
         struct linux_addrinfo* i = ai->ai_next;
-        free(ai->ai_canonname);
-        free(ai);
+        resource_free(ai);
         ai = i;
     }
 }
@@ -932,4 +997,47 @@ int impl_gethostname(char* tgt, int l)
     }
     strcpy(tgt, "localhost");
     return 0;
+}
+
+int impl_fclose(FILE* f)
+{
+    FILE** fp = (FILE**)f;
+    int ans = fclose(*fp);
+    *fp = 0;
+    resource_free(f);
+    return ans;
+}
+
+int impl_fflush(FILE* f)
+{
+    return fflush(*(FILE**)f);
+}
+
+int impl_fileno(FILE* f)
+{
+    return fileno(*(FILE**)f);
+}
+
+ssize_t impl_fread(void* data, size_t sz, size_t nmemb, FILE* f)
+{
+    return fread(data, sz, nmemb, *(FILE**)f);
+}
+
+ssize_t impl_fwrite(const void* data, size_t sz, size_t nmemb, FILE* f)
+{
+    return fwrite(data, sz, nmemb, *(FILE**)f);
+}
+
+DIR* impl_opendir(const char* path)
+{
+    dbg_printf("opendir(%s)\n", path);
+    return 0;
+}
+
+char* impl_strdup(const char* s)
+{
+    size_t l = strlen(s);
+    char* ans = resource_alloc(l+1, res_memory);
+    strncpy(ans, s, l+1);
+    return ans;
 }
