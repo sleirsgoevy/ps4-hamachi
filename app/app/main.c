@@ -14,7 +14,6 @@ void daemon_thread(void);
 int my_popen(void** buf, size_t* sz, int argc, ...);
 
 int ldr_main(int argc, const char** argv);
-pid_t my_fork(int, int, int, int*);
 
 char* error_string(void*, size_t);
 char** list_networks(int*);
@@ -37,7 +36,7 @@ int is_sw_version_supported(void)
     OrbisKernelSwVersion sw_ver;
     sceKernelGetSystemSwVersion(&sw_ver);
     int ver = sw_ver.i_version >> 16;
-    return ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755);
+    return ver == 0x505 || ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755);
 }
 
 int main(int argc, const char** argv)

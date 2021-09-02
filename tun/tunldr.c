@@ -1,10 +1,13 @@
 asm("kexec:\nmov $11, %rax\nmov %rcx, %r10\nsyscall\nret");
 void kexec(void* fn, int ver);
 
+asm("blob_505:\n.incbin \"blob-ps4-505.bin\"\nblob_505_end:");
 asm("blob_672:\n.incbin \"blob-ps4-672.bin\"\nblob_672_end:");
 asm("blob_702:\n.incbin \"blob-ps4-702.bin\"\nblob_702_end:");
 asm("blob_755:\n.incbin \"blob-ps4-755.bin\"\nblob_755_end:");
 
+extern char blob_505[];
+extern char blob_505_end[];
 extern char blob_672[];
 extern char blob_672_end[];
 extern char blob_702[];
@@ -33,7 +36,16 @@ static void load_start_module(void* td, struct uap* uap)
     int(*copyin)(const void*, void*, unsigned long long);
     char* blob;
     char* blob_end;
-    if(uap->arg == 0x672)
+    if(uap->arg == 0x505)
+    {
+        // 5.05 offsets
+        kernel_map = *(unsigned long long*)(kernel_map + 0x1ac60e0);
+        kmem_alloc = (void*)(kernel_base + 0xfcc80);
+        copyin = (void*)(kernel_base + 0x1ea710);
+        blob = blob_505;
+        blob_end = blob_505_end;
+    }
+    else if(uap->arg == 0x672)
     {
         // 6.72 offsets
         kernel_map = *(unsigned long long*)(kernel_base + 0x220dfc0);

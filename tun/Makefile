@@ -18,7 +18,7 @@ blob-ps4-%.elf: main.c crt-ps4-%.o
 blob-ps4-%.bin: blob-ps4-%.elf
 	objcopy blob-ps4-$*.elf --only-section .text --only-section .data --only-section .bss --only-section .rodata -O binary blob-ps4-$*.bin
 
-tunldr.o: tunldr.c blob-ps4-672.bin blob-ps4-672.elf blob-ps4-702.bin blob-ps4-702.elf blob-ps4-755.bin blob-ps4-755.elf
+tunldr.o: tunldr.c blob-ps4-505.bin blob-ps4-505.elf blob-ps4-672.bin blob-ps4-672.elf blob-ps4-702.bin blob-ps4-702.elf blob-ps4-755.bin blob-ps4-755.elf
 	gcc tunldr.c -ffreestanding -c -o tunldr.o -fPIE
 
 clean:
