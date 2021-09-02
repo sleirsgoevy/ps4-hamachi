@@ -13,6 +13,7 @@
 #include <sys/sysent.h>
 #include <sys/sockio.h>
 #include <sys/queue.h>
+#include <sys/protosw.h>
 #include <machine/atomic.h>
 #include <net/if.h>
 #include <net/if_types.h>
@@ -41,6 +42,7 @@
 
 struct malloc_type* get_M_TEMP(void);
 struct sysent* get_sysent(void);
+struct pr_usrreqs* get_udp_usrreqs(void);
 
 asm("uma_zfree_arg:\nret");
 asm("m_free_ext:\nret");
@@ -299,51 +301,46 @@ struct cdevsw tun_vtable = {
     .d_name = NULL,
 };
 
-int (*p_old_sendto)(struct thread*, void*);
+int(*old_udp_send)(struct socket*, int, struct mbuf*, struct sockaddr*, struct mbuf*, struct thread*);
 
-int new_sendto(struct thread* td, void* uap)
+int new_udp_send(struct socket* so, int flags, struct mbuf* m, struct sockaddr* addr, struct mbuf* control, struct thread* td)
 {
-    unsigned long long* params = (unsigned long long*)uap;
-    if(!params[4] || params[5] > 64) // len
-        return p_old_sendto(td, uap);
-    char buf[64];
-    int rv = copyin((void*)params[4], buf, params[5]);
-    if(rv)
-        return (rv);
-    struct sockaddr_in* sin = (struct sockaddr_in*)buf;
-    if(sin->sin_family != AF_INET || sin->sin_addr.s_addr != INADDR_BROADCAST)
-        return p_old_sendto(td, uap);
-    int(*sys_ioctl)(struct thread*, void*) = get_sysent()[SYS_ioctl].sy_call;
-    params[4] = (unsigned long long)sin;
-    for(int i = 0; i < 10; i++)
+    struct sockaddr_in* sin = (void*)addr;
+    if(sin && sin->sin_family == AF_INET && sin->sin_addr.s_addr == INADDR_BROADCAST)
     {
-        struct ifnet* iface = acquire_iface(i);
-        if(!iface)
-            continue;
-        mtx_lock(&IF_ADDR_MTX(*iface));
-        struct ifaddr* ia;
-        TAILQ_FOREACH(ia, &iface->if_addrhead, ifa_link)
+        for(int i = 0; i < 10; i++)
         {
-#ifdef PS4
-            struct ifaddr* ia2 = *(void**)(((unsigned long long)ia)+208); //wtf is this??
-#else
-            struct ifaddr* ia2 = ia;
-#endif
-            if(!ia2 || !ia2->ifa_broadaddr || ia2->ifa_broadaddr->sa_family != AF_INET)
-            {
-                printf("[tun] tun%d: wtf: invalid address\n", i);
+            struct ifnet* iface = acquire_iface(i);
+            if(!iface)
                 continue;
+            mtx_lock(&IF_ADDR_MTX(*iface));
+            struct ifaddr* ia;
+            TAILQ_FOREACH(ia, &iface->if_addrhead, ifa_link)
+            {
+#ifdef PS4
+                struct ifaddr* ia2 = *(void**)(((unsigned long long)ia)+208); //wtf is this??
+#else
+                struct ifaddr* ia2 = ia;
+#endif
+                if(!ia2 || !ia2->ifa_broadaddr || ia2->ifa_broadaddr->sa_family != AF_INET)
+                {
+                    printf("[tun] tun%d: wtf: invalid address\n", i);
+                    continue;
+                }
+                struct sockaddr_in sin2 = *sin;
+                sin2.sin_addr = ((struct sockaddr_in*)ia2->ifa_broadaddr)->sin_addr;
+                printf("[tun] tun%d: sendtoing to %x:%hx\n", i, sin2.sin_addr.s_addr, sin2.sin_port);
+                struct mbuf* m2 = (m ? m_dup(m, M_WAITOK) : 0);
+                struct mbuf* c2 = (control ? m_dup(control, M_WAITOK) : 0);
+                int rv;
+                if((rv = old_udp_send(so, flags, m2, (void*)&sin2, c2, td)))
+                    printf("[tun] tun%d: could not sendto: %d\n", i, rv);
             }
-            sin->sin_addr = ((struct sockaddr_in*)ia2->ifa_broadaddr)->sin_addr;
-            //printf("[tun] tun%d: broadcast to %08x\n", i, __builtin_bswap32(sin->sin_addr.s_addr));
-            if((rv = p_old_sendto(td, params)))
-                printf("[tun] tun%d: could not sendto: %d\n", i, rv);
+            mtx_unlock(&IF_ADDR_MTX(*iface));
+            release_iface(i, iface);
         }
-        mtx_unlock(&IF_ADDR_MTX(*iface));
-        release_iface(i, iface);
     }
-    sin->sin_addr.s_addr = INADDR_BROADCAST;
-    return p_old_sendto(td, params);
+    return old_udp_send(so, flags, m, addr, control, td);
 }
 
 int main(struct thread* td)
@@ -369,8 +366,8 @@ int main(struct thread* td)
     tun_vtable.d_ioctl = tun_ioctl;
     tun_vtable.d_poll = tun_poll;
     tun_vtable.d_name = "tun";
-    p_old_sendto = get_sysent()[SYS_sendto].sy_call;
-    get_sysent()[SYS_sendto].sy_call = new_sendto;
+    old_udp_send = get_udp_usrreqs()->pru_send;
+    get_udp_usrreqs()->pru_send = new_udp_send;
     make_dev_p(MAKEDEV_CHECKNAME | MAKEDEV_WAITOK, &tun, &tun_vtable, 0, UID_ROOT, GID_WHEEL, 0600, "tun");
     printf("[tun] Goodbye, kernel world!\n");
     return 0;

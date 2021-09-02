@@ -204,6 +204,12 @@ mov r11, [rel kernel_base]
 lea r11, [r11+0x3c17a0]
 jmp r11
 
+global m_dup
+m_dup:
+mov r11, [rel kernel_base]
+lea r11, [r11+0x2ac300]
+jmp r11
+
 global get_M_TEMP
 get_M_TEMP:
 mov rax, [rel kernel_base]
@@ -219,6 +225,12 @@ ret
 global get_curthread
 get_curthread:
 mov rax, [fs:0]
+ret
+
+global get_udp_usrreqs
+get_udp_usrreqs:
+mov rax, [rel kernel_base]
+add rax, 0x1a5dfa8
 ret
 
 ; ...
