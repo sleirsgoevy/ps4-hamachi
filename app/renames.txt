@@ -79,6 +79,7 @@ musl_strtol strtol
 musl_symlink symlink
 musl_syscall syscall
 musl_time time
+musl_vasprintf vasprintf
 musl_vfprintf vfprintf
 musl_vprintf vprintf
 musl_vsnprintf vsnprintf

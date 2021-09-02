@@ -116,32 +116,44 @@ int impl_getopt(int argc, char** argv, const char* optstring)
     return ans; 
 }
 
+extern int is_in_popen;
+void popen_write(const void*, size_t);
+
+static int popen_printf(const char* fmt, va_list vl)
+{
+    char* s = 0;
+    int ans = vasprintf(&s, fmt, vl);
+    popen_write(s, ans);
+    free(s);
+    return ans;
+}
+
 int impl___printf_chk(int flag, const char* fmt, ...)
 {
     va_list x;
     va_start(x, fmt);
-    int ans = vprintf(fmt, x);
+    int ans = is_in_popen ? popen_printf(fmt, x) : vprintf(fmt, x);
     va_end(x);
     return ans;
 }
 
 int impl___vprintf_chk(int flag, const char* fmt, va_list vl)
 {
-    return vprintf(fmt, vl);
+    return is_in_popen ? popen_printf(fmt, vl) : vprintf(fmt, vl);
 }
 
 int impl___fprintf_chk(FILE* f, int flag, const char* fmt, ...)
 {
     va_list x;
     va_start(x, fmt);
-    int ans = vfprintf(*(FILE**)f, fmt, x);
+    int ans = (*(FILE**)f == stdout && is_in_popen) ? popen_printf(fmt, x) : vfprintf(*(FILE**)f, fmt, x);
     va_end(x);
     return ans;
 }
 
 int impl___vfprintf_chk(FILE* f, int flag, const char* fmt, va_list vl)
 {
-    return vfprintf(*(FILE**)f, fmt, vl);
+    return (*(FILE**)f == stdout && is_in_popen) ? popen_printf(fmt, vl) : vfprintf(*(FILE**)f, fmt, vl);
 }
 
 int impl___vsnprintf_chk(char* s, size_t ml, int f, size_t l, const char* fmt, va_list vl)
@@ -980,7 +992,13 @@ ssize_t impl_write(int fd, const void* buf, size_t cnt)
 {
     if(fd == tun_fd)
         return tuntap_write(fd, (const char*)buf, cnt);
-    return write(fd, buf, cnt);
+    else if(fd == 1 && is_in_popen)
+    {
+        popen_write(buf, cnt);
+        return cnt;
+    }
+    else
+        return write(fd, buf, cnt);
 }
 
 int impl_pthread_mutex_init(void)
@@ -1025,6 +1043,11 @@ ssize_t impl_fread(void* data, size_t sz, size_t nmemb, FILE* f)
 
 ssize_t impl_fwrite(const void* data, size_t sz, size_t nmemb, FILE* f)
 {
+    if(*(FILE**)f == stdout && is_in_popen)
+    {
+        popen_write(data, sz*nmemb);
+        return nmemb;
+    }
     return fwrite(data, sz, nmemb, *(FILE**)f);
 }
 

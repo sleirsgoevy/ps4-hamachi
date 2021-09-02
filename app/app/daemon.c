@@ -56,41 +56,23 @@ void daemon_thread(void)
     }
 }
 
+extern int is_in_popen;
+ssize_t popen_get(void**, size_t*);
+
 void my_popen(void** ptr, size_t* sz, int argc, ...)
 {
+    if(*ptr || *sz)
+        abort();
     va_list va;
     va_start(va, argc);
-    int pipe[2];
-    socketpair(AF_UNIX, SOCK_STREAM, 0, pipe);
-    int out_fd = dup(1);
+    is_in_popen = 1;
     pid_t p = my_fork();
     if(!p)
     {
-        dup2(pipe[1], 1);
-        close(pipe[1]);
         vexecute(argc, va);
     }
     va_end(va);
-    dup2(out_fd, 1);
-    close(out_fd);
-    char* buf = (char*)*ptr;
-    size_t buf_sz = *sz;
-    size_t offset = 0;
-    for(;;)
-    {
-        if(offset == buf_sz)
-        {
-            buf_sz = 2 * buf_sz + 1;
-            buf = (char*)realloc(buf, buf_sz);
-        }
-        size_t chk = read(pipe[0], buf + offset, buf_sz - offset);
-        if(chk <= 0)
-            break;
-        offset += chk;
-    }
-    *ptr = buf;
-    *sz = offset;
-    close(pipe[0]);
+    popen_get(ptr, sz);
 }
 
 int init_daemon(void)
