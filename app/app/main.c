@@ -8,6 +8,7 @@
 #include <signal.h>
 #include "gui.h"
 
+int maybe_load_tun(void);
 int init_daemon(void);
 int start_daemon(void);
 void daemon_thread(void);
@@ -31,12 +32,17 @@ char* concat3(const char* s1, const char* s2, const char* s3)
     return buf;
 }
 
-int is_sw_version_supported(void)
+uint32_t get_fw_version(void);
+
+void check_is_sw_version_supported(void)
 {
-    OrbisKernelSwVersion sw_ver;
-    sceKernelGetSystemSwVersion(&sw_ver);
-    int ver = sw_ver.i_version >> 16;
-    return ver == 0x505 || ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755);
+    int ver = get_fw_version() >> 16;
+    if(ver == 0x505 || ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755))
+        return;
+    char errormsg[256];
+    sprintf(errormsg, "Your firmware version is not supported. Supported versions: 5.05, 6.72, 7.02, 7.5X. Your version: %x.%02x", ver >> 8, ver & 255);
+    gui_init();
+    gui_show_error_screen(errormsg);
 }
 
 int main(int argc, const char** argv)
@@ -49,11 +55,8 @@ int main(int argc, const char** argv)
         return 0;
     }
     gui_preinit();
-    if(!is_sw_version_supported())
-    {
-        gui_init();
-        gui_show_error_screen("Your firmware version is not supported. Supported versions: 6.72, 7.02, 7.5X"); //noreturn
-    }
+    check_is_sw_version_supported();
+    maybe_load_tun();
     int d_st = start_daemon();
     if(d_st > 0)
     {

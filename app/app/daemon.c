@@ -12,7 +12,6 @@
 #include <signal.h>
 
 int jailbreak(void);
-int maybe_load_tun(void);
 int my_fork(void);
 void my_exit(int);
 int ldr_main(int argc, const char** argv);
@@ -83,7 +82,5 @@ int init_daemon(void)
     dup2(fd, 0);
     dup2(fd, 1);
     dup2(fd, 2);
-    if(maybe_load_tun())
-        return -1;
     return 0;
 }

@@ -39,7 +39,7 @@ static void load_start_module(void* td, struct uap* uap)
     if(uap->arg == 0x505)
     {
         // 5.05 offsets
-        kernel_map = *(unsigned long long*)(kernel_map + 0x1ac60e0);
+        kernel_map = *(unsigned long long*)(kernel_base + 0x1ac60e0);
         kmem_alloc = (void*)(kernel_base + 0xfcc80);
         copyin = (void*)(kernel_base + 0x1ea710);
         blob = blob_505;
