@@ -5,6 +5,7 @@ asm("blob_505:\n.incbin \"blob-ps4-505.bin\"\nblob_505_end:");
 asm("blob_672:\n.incbin \"blob-ps4-672.bin\"\nblob_672_end:");
 asm("blob_702:\n.incbin \"blob-ps4-702.bin\"\nblob_702_end:");
 asm("blob_755:\n.incbin \"blob-ps4-755.bin\"\nblob_755_end:");
+asm("blob_900:\n.incbin \"blob-ps4-900.bin\"\nblob_900_end:");
 
 extern char blob_505[];
 extern char blob_505_end[];
@@ -14,6 +15,8 @@ extern char blob_702[];
 extern char blob_702_end[];
 extern char blob_755[];
 extern char blob_755_end[];
+extern char blob_900[];
+extern char blob_900_end[];
 
 static unsigned long long get_syscall()
 {
@@ -71,6 +74,15 @@ static void load_start_module(void* td, struct uap* uap)
         copyin = (void*)(kernel_base + 0x28f9f0);
         blob = blob_755;
         blob_end = blob_755_end;
+    }
+    else if(uap->arg == 0x900)
+    {
+        // 9.00 offsets
+        kernel_map = *(unsigned long long*)(kernel_base + 0x2268d48);
+        kmem_alloc = (void*)(kernel_base + 0x37be70);
+        copyin = (void*)(kernel_base + 0x2716a0);
+        blob = blob_900;
+        blob_end = blob_900_end;
     }
     else
         return;

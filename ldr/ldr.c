@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#undef stderr
+extern FILE* stderr;
 
 int readall(int fd, void* b, int cnt)
 {

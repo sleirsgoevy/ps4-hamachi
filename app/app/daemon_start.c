@@ -78,12 +78,23 @@ int copy_file(const char* tgt, const char* src)
 
 int mount_nullfs(const char* mnt, const char* tgt)
 {
-    struct iovec data[6] = {
+    struct iovec data[] = {
         {"fstype", 7}, {"nullfs", 7},
         {"fspath", 7}, {(char*)mnt, strlen(mnt)+1},
         {"target", 7}, {(char*)tgt, strlen(tgt)+1},
     };
     return nmount(data, 6, MNT_RDONLY);
+}
+
+int mount_tmpfs(const char* tgt)
+{
+    struct iovec data[] = {
+        {"fstype", 7}, {"tmpfs", 6},
+        {"fspath", 7}, {(char*)tgt, strlen(tgt)+1},
+        {"size", 5}, {"1073741824", 11},
+        {"rw", 3}, {"", 1},
+    };
+    return nmount(data, 8, MNT_RDONLY);
 }
 
 int mount_nullfs_in(const char* mnt, const char* tgt, const char* name)
@@ -145,7 +156,7 @@ int sceSystemServiceLaunchApp(const char* titleid, const char** argv, LncAppPara
 int is_daemon_outdated(void)
 {
     struct stat st1, st2;
-    if(stat("/data/homebrew/" DAEMON_ID "-eboot.bin", &st1)
+    if(stat("/mnt/daemons/" DAEMON_ID "/eboot.bin", &st1)
     || stat("/user/app/" APP_ID "/app.pkg", &st2))
         return 1; //assume the worst
     return st2.st_mtime >= st1.st_mtime;
@@ -177,6 +188,7 @@ int start_daemon(void)
     {
         printf("mounting nullfs\n");
         mkdir("/mnt/daemons", 0777);
+        mount_tmpfs("/mnt/daemons");
         mount_all("/mnt/daemons", "/system/vsh/app");
         mount_nullfs("/system/vsh/app", "/mnt/daemons");
         mount_all("/system/vsh/app", "/mnt/daemons");
@@ -185,11 +197,13 @@ int start_daemon(void)
     printf("copying daemon\n");
     if(outd)
     {
-        mkdir("/data/homebrew", 0777);
-        unlink("/data/homebrew/" DAEMON_ID "-eboot.bin");
-        copy_file("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
+        //mkdir("/data/homebrew", 0777);
+        //unlink("/data/homebrew/" DAEMON_ID "-eboot.bin");
+        //copy_file("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
+        unlink("/mnt/daemon/" DAEMON_ID "/eboot.bin");
+        copy_file("/mnt/daemons/" DAEMON_ID "/eboot.bin", "/mnt/sandbox/" APP_ID "_000/app0/eboot.bin");
     }
-    symlink("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/daemons/" DAEMON_ID "/eboot.bin");
+    //symlink("/data/homebrew/" DAEMON_ID "-eboot.bin", "/mnt/daemons/" DAEMON_ID "/eboot.bin");
     mkdir("/mnt/daemons/" DAEMON_ID "/sce_sys", 0777);
     copy_file("/mnt/daemons/" DAEMON_ID "/sce_sys/param.sfo", "/mnt/sandbox/" APP_ID "_000/app0/daemon.sfo");
     printf("launching daemon\n");

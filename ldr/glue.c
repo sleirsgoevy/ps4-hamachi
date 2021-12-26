@@ -22,6 +22,10 @@
 #include "handles.h"
 #undef fileno
 int fileno(FILE*);
+#undef stdout
+extern FILE* stdout;
+#undef stderr
+extern FILE* stderr;
 
 #ifdef DEBUG_PRINTS
 #define dbg_printf printf

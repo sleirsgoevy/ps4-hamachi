@@ -13,6 +13,18 @@
 #include <resolv.h>
 #include <arpa/nameser.h>
 
+//undo fbsd defines
+#undef stdout
+extern FILE* stdout;
+#undef res_search
+typeof(__res_search) res_search;
+#undef inet_addr
+typeof(__inet_addr) inet_addr;
+#undef ns_initparse
+typeof(__ns_initparse) ns_initparse;
+#undef ns_parserr
+typeof(__ns_parserr) ns_parserr;
+
 void* generate_stub(const char* name);
 
 struct symbol_desc

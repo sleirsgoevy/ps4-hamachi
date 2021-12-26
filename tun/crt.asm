@@ -222,11 +222,6 @@ get_M_TEMP:
 mov rax, 0xffffffff8107cc00
 ret 
 
-global get_sysent
-get_sysent:
-mov rax, 0xffffffff81072280
-ret
-
 global get_udp_usrreqs
 get_udp_usrreqs:
 mov rax, 0xffffffff8109dea0

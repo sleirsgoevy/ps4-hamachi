@@ -216,12 +216,6 @@ mov rax, [rel kernel_base]
 add rax, 0x1540eb0
 ret 
 
-global get_sysent
-get_sysent:
-mov rax, [rel kernel_base]
-add rax, 0x111e000
-ret
-
 global get_curthread
 get_curthread:
 mov rax, [fs:0]

@@ -37,10 +37,10 @@ uint32_t get_fw_version(void);
 void check_is_sw_version_supported(void)
 {
     int ver = get_fw_version() >> 16;
-    if(ver == 0x505 || ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755))
+    if(ver == 0x505 || ver == 0x672 || ver == 0x702 || (ver >= 0x750 && ver <= 0x755) || ver == 0x900)
         return;
     char errormsg[256];
-    sprintf(errormsg, "Your firmware version is not supported. Supported versions: 5.05, 6.72, 7.02, 7.5X. Your version: %x.%02x", ver >> 8, ver & 255);
+    sprintf(errormsg, "Your firmware version is not supported. Supported versions: 5.05, 6.72, 7.02, 7.5X, 9.00. Your version: %x.%02x", ver >> 8, ver & 255);
     gui_init();
     gui_show_error_screen(errormsg);
 }

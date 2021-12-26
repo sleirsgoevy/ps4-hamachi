@@ -10,7 +10,6 @@
 #include <sys/lock.h>
 #include <sys/mutex.h>
 #include <sys/syscall.h>
-#include <sys/sysent.h>
 #include <sys/sockio.h>
 #include <sys/queue.h>
 #include <sys/protosw.h>
@@ -41,7 +40,6 @@
 #endif
 
 struct malloc_type* get_M_TEMP(void);
-struct sysent* get_sysent(void);
 struct pr_usrreqs* get_udp_usrreqs(void);
 
 asm("uma_zfree_arg:\nret");
