@@ -2,7 +2,8 @@
 
 **This is not an official product by LogMeIn Inc.**
 
-This is a port of LogMeIn Hamachi virtual LAN client to the PS4. It is done by wrapping the linux binary. As of now this only works on FW 6.72.
+This is a port of LogMeIn Hamachi virtual LAN client to the PS4. It is done by wrapping the linux binary.
+Supported firmwares: 5.05, 6.72, 7.02, 7.50-7.55, 9.00.
 
 Non-free assets used:
 * [Linux client](https://vpn.net/linux) binary
