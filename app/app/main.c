@@ -54,6 +54,7 @@ int main(int argc, const char** argv)
         daemon_thread();
         return 0;
     }
+    sceSysmoduleLoadModule(0x96); //libSceImeDialog.sprx
     gui_preinit();
     check_is_sw_version_supported();
     maybe_load_tun();

@@ -2,12 +2,14 @@
 #include "gui.h"
 #include <orbis/Pad.h>
 #include <orbis/UserService.h>
+#include <orbis/ImeDialog.h>
 
 //std::stringstream debugLogStream;
 
 Scene2D* scene;
 FT_Face face;
 static int curFrame = 0;
+static int userID = -1;
 static int padHandle = -1;
 
 static void flip()
@@ -43,13 +45,13 @@ static void drawExclamationMark()
                 scene->DrawPixel(j, i, black);
 }
 
-static void drawMessage(const char* message)
+static void drawMessage(const char* message, int y = 530)
 {
     Color white = {255, 255, 255};
     Color black = {0, 0, 0};
     int w, h;
     scene->GetTextDimensions((char*)message, face, w, h);
-    scene->DrawText((char*)message, face, 960 - w / 2, 530, white, black);
+    scene->DrawText((char*)message, face, 960 - w / 2, y, white, black);
 }
 
 static void drawNetworks(const char** networks, int cnt, int cur)
@@ -124,32 +126,6 @@ static unsigned int pollPad()
     return data.buttons;
 }
 
-static const char keyboard[8][13] = {
-"1234567890-<",
-"qwertyuiop[]",
-"asdfghjkl;'\\",
-"^zxcvbnm,./=",
-"!@#$%^&*()_<",
-"QWERTYUIOP{}",
-"ASDFGHJKL:\"|",
-"^ZXCVBNM<>?+",
-};
-
-static void drawKeypad(int x, int y, int shift)
-{
-    Color white = {255, 255, 255};
-    Color black = {0, 0, 0};
-    Color grey = {192, 192, 192};
-    scene->DrawRectangle(160 * x, 870 + 40 * y, 160, 40, grey);
-    for(int i = 0; i < 4; i++)
-        for(int j = 0; j < 12; j++)
-        {
-            char s[2] = {keyboard[i+shift][j], 0};
-            scene->DrawText(s, face, 160 * j + 80, 900 + 40 * i, white, black);
-        }
-    scene->DrawText((char*)"R2 = Enter", face, 20, 1060, white, black);
-}
-
 static void drawInput(int y, int margin, Color bgColor, Color borderColor, Color textColor, const char* text)
 {
     for(int x = margin; x <= 1920 - margin; x++)
@@ -192,72 +168,6 @@ static void drawFocusedInput(int y, int margin, const char* msg)
     drawInput(y, margin, white, black, black, msg);
 }
 
-static bool keyboardLoop(int* ys, int* margins, char** ptrs, int idx)
-{
-    int length = strlen(ptrs[idx]);
-    int capacity = length;
-    Color black = {0, 0, 0};
-    int kpX = 0, kpY = 0;
-    bool shift = false;
-    for(;;)
-    {
-        drawLoginFormText(ptrs[2]);
-        for(int i = 0; i < 3; i++)
-        {
-            if(i == idx)
-            {
-                drawFocusedInput(ys[i], margins[i], ptrs[i]);
-                int w, h;
-                scene->GetTextDimensions(ptrs[i], face, w, h);
-                for(int j = 5; j <= 35; j++)
-                    scene->DrawPixel(w + 28, ys[i] + j, black);
-            }
-            else
-                drawInput(ys[i], margins[i], ptrs[i]);
-        }
-        drawKeypad(kpX, kpY, shift ? 4 : 0);
-        flip();
-        unsigned int pad = pollPad();
-        if((pad & ORBIS_PAD_BUTTON_UP))
-            kpY = (kpY + 3) % 4;
-        else if((pad & ORBIS_PAD_BUTTON_DOWN))
-            kpY = (kpY + 1) % 4;
-        else if((pad & ORBIS_PAD_BUTTON_LEFT))
-            kpX = (kpX + 11) % 12;
-        else if((pad & ORBIS_PAD_BUTTON_RIGHT))
-            kpX = (kpX + 1) % 12;
-        else if((pad & ORBIS_PAD_BUTTON_R2))
-            return true;
-        else if((pad & ORBIS_PAD_BUTTON_CIRCLE))
-            return false;
-        else if((pad & ORBIS_PAD_BUTTON_SQUARE) || ((pad & ORBIS_PAD_BUTTON_CROSS) && kpX == 11 && kpY == 0))
-        {
-            if(length)
-                ptrs[idx][--length] = 0;
-        }
-        else if((pad & ORBIS_PAD_BUTTON_L2) || ((pad & ORBIS_PAD_BUTTON_CROSS) && kpX == 0 && kpY == 3))
-            shift = !shift;
-        else if((pad & ORBIS_PAD_BUTTON_CROSS) || (pad & ORBIS_PAD_BUTTON_TRIANGLE))
-        {
-            int key;
-            if((pad & ORBIS_PAD_BUTTON_TRIANGLE))
-                key = ' ';
-            else
-            {
-                key = keyboard[shift?kpY+4:kpY][kpX];
-                shift = false;
-            }
-            if(length == capacity)
-            {
-                capacity = 2 * capacity + 1;
-                ptrs[idx] = (char*)realloc(ptrs[idx], capacity + 1);
-            }
-            ptrs[idx][length++] = key;
-            ptrs[idx][length] = 0;
-        }
-    }
-}
-
 static void drawLoginForm(int* ys, int* margins, char** ptrs, int idx)
 {
     drawLoginFormText(ptrs[2]);
@@ -266,6 +176,67 @@ static void drawLoginForm(int* ys, int* margins, char** ptrs, int idx)
             drawFocusedInput(ys[i], margins[i], ptrs[i]);
         else
             drawInput(ys[i], margins[i], ptrs[i]);
+}
+
+static void drawError(const char* message, bool ild = false)
+{
+    drawSkeleton();
+    drawExclamationMark();
+    drawMessage(message);
+    if(!ild)
+        drawMessage("Press OPTIONS to dump logs", 650);
+}
+
+void showErrorDialog(const char* message, bool ild = false);
+void gui_show_notification(const char* message);
+extern "C" const char* dump_logs(void);
+
+static void doDumpLogs()
+{
+    const char* err = dump_logs();
+    if(!err)
+        gui_show_notification("Logs have been dumped to USB");
+    else
+        showErrorDialog(err, true);
+}
+
+void showErrorDialog(const char* message, bool ild)
+{
+    Color blue = {128, 128, 255};
+    Color white = {255, 255, 255};
+    for(;;)
+    {
+        drawError(message, ild);
+        scene->DrawRectangle(720, 540, 480, 40, blue);
+        int w, h;
+        scene->GetTextDimensions((char*)"OK", face, w, h);
+        scene->DrawText((char*)"OK", face, 960 - w/2, 570, blue, white);
+        flip();
+        unsigned int keys = pollPad();
+        if(!ild && (keys & ORBIS_PAD_BUTTON_OPTIONS))
+            doDumpLogs();
+        if((keys & ORBIS_PAD_BUTTON_CROSS))
+            return;
+    }
+}
+
+void convertFromAscii(char* ptr, size_t sz)
+{
+    size_t l = strlen(ptr);
+    unsigned char* p = (unsigned char*)ptr + l;
+    uint16_t* q = (uint16_t*)ptr + l;
+    char* end = (char*)q;
+    *q = *p;
+    for(size_t i = 0; i < l; i++)
+        *--q = *--p;
+    memset(end, 0, ptr+sz-end);
+}
+
+void convertToAscii(char* ptr)
+{
+    const uint16_t* src = (const uint16_t*)ptr;
+    unsigned char* dst = (unsigned char*)ptr;
+    while((*dst++ = *src++));
 }
 
 extern "C" void gui_preinit(void)
@@ -280,7 +251,6 @@ extern "C" void gui_init(void)
     scene->Init(1920*1080*4*2, 2);
     scene->SetActiveFrameBuffer(0);
     scene->FrameBufferClear();
-    int userID;
     OrbisUserServiceInitializeParams param;
     param.priority = ORBIS_KERNEL_PRIO_FIFO_LOWEST;
     sceUserServiceInitialize(&param);
@@ -293,31 +263,17 @@ extern "C" void gui_show_error_screen(const char* message)
 {
     for(;;)
     {
-        drawSkeleton();
-	drawExclamationMark();
-        drawMessage(message);
+        drawError(message);
+        unsigned int keys = pollPad();
+        if((keys & ORBIS_PAD_BUTTON_OPTIONS))
+            doDumpLogs();
         flip();
     }
 }
 
 extern "C" void gui_show_error_dialog(const char* message)
 {
-    Color blue = {128, 128, 255};
-    Color white = {255, 255, 255};
-    for(;;)
-    {
-        drawSkeleton();
-	drawExclamationMark();
-        drawMessage(message);
-        scene->DrawRectangle(720, 540, 480, 40, blue);
-        int w, h;
-        scene->GetTextDimensions((char*)"OK", face, w, h);
-        scene->DrawText((char*)"OK", face, 960 - w/2, 570, blue, white);
-        flip();
-        unsigned int keys = pollPad();
-        if((keys & ORBIS_PAD_BUTTON_CROSS))
-            return;
-    }
+    return showErrorDialog(message);
 }
 
 extern "C" void gui_show_notification(const char* message)
@@ -475,9 +431,28 @@ extern "C" void gui_login(const char* form_name, char** login, char** password)
                     *password = ptrs[1];
                     return;
                 }
-                if(!keyboardLoop(ys, margins, ptrs, idx))
+                ptrs[idx] = (char*)realloc(ptrs[idx], 4096);
+                convertFromAscii(ptrs[idx], 4096);
+                OrbisImeDialogSetting ime_params = {
+                    .userId = (uint32_t)userID,
+                    .type = ORBIS_TYPE_BASIC_LATIN,
+                    .maxTextLength = 2047,
+                    .inputTextBuffer = (uint16_t*)ptrs[idx],
+                    .posy = (float)ys[idx],
+                };
+                sceImeDialogInit(&ime_params, 0);
+                while(sceImeDialogGetStatus() != 2)
+                    sceKernelUsleep(100000);
+                OrbisDialogResult res;
+                memset(&res, 0, sizeof(res));
+                sceImeDialogGetResult(&res);
+                sceImeDialogForceClose();
+                convertToAscii(ptrs[idx]);
+                if(res.endstatus != ORBIS_DIALOG_OK)
                     break;
                 idx++;
+                drawLoginForm(ys, margins, ptrs, idx);
+                flip();
             } 
         }
     }

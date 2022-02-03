@@ -78,9 +78,10 @@ int init_daemon(void)
 {
     if(jailbreak())
         return -1;
-    int fd = open("/dev/console", O_RDWR);
-    dup2(fd, 0);
-    dup2(fd, 1);
-    dup2(fd, 2);
+    int cnsl = open("/dev/console", O_RDWR);
+    dup2(cnsl, 0);
+    dup2(cnsl, 1);
+    dup2(cnsl, 2);
+    close(cnsl);
     return 0;
 }

@@ -49,7 +49,6 @@ int copy_file(const char* tgt, const char* src)
     if(fd2 < 0)
     {
         close(fd1);
-        close(fd2);
         return -1;
     }
     char buf[4096];

@@ -46,6 +46,8 @@ struct atexit_cb
 };
 
 __thread int is_main_thread;
+static FILE* log_handle;
+const char* log_path = PREFIX "/var/lib/logmein-hamachi/h2-engine.log";
 
 int impl___cxa_atexit(void(*f)(void*), void* o, void* d)
 {
@@ -152,12 +154,24 @@ int impl___fprintf_chk(FILE* f, int flag, const char* fmt, ...)
     va_start(x, fmt);
     int ans = (*(FILE**)f == stdout && is_in_popen) ? popen_printf(fmt, x) : vfprintf(*(FILE**)f, fmt, x);
     va_end(x);
+    if(*(FILE**)f == log_handle)
+    {
+        va_list y;
+        va_start(y, fmt);
+        vprintf(fmt, y);
+        va_end(y);
+    }
     return ans;
 }
 
 int impl___vfprintf_chk(FILE* f, int flag, const char* fmt, va_list vl)
 {
-    return (*(FILE**)f == stdout && is_in_popen) ? popen_printf(fmt, vl) : vfprintf(*(FILE**)f, fmt, vl);
+    va_list vl2;
+    va_copy(vl2, vl);
+    int ans = (*(FILE**)f == stdout && is_in_popen) ? popen_printf(fmt, vl) : vfprintf(*(FILE**)f, fmt, vl);
+    if(*(FILE**)f == log_handle)
+        vprintf(fmt, vl2);
+    return ans;
 }
 
 int impl___vsnprintf_chk(char* s, size_t ml, int f, size_t l, const char* fmt, va_list vl)
@@ -349,7 +363,7 @@ int impl_daemon(int nochdir, int noclose)
 
 static void res_file(void* f) {
     FILE* fp = *(FILE**)f;
-    if(fp)
+    if(fp && fp != log_handle)
         fclose(fp);
 }
 
@@ -357,14 +371,20 @@ FILE* impl_fopen64(const char* path, const char* mode)
 {
     dbg_printf("fopen64(\"%s\", \"%s\")", path, mode);
     FILE* ans;
+    char* pp = build_fake_path(path);
     if(!strcmp(path, "/var/lib/logmein-hamachi/h2-engine.log"))
-        ans = fopen("/dev/console", mode);
-    else
     {
-        char* pp = build_fake_path(path);
-        ans = fopen(pp, mode);
-        free(pp);
+        if(log_handle)
+            ans = log_handle;
+        else
+        {
+            ans = log_handle = fopen(pp, "w");
+            setvbuf(ans, NULL, _IOLBF, 1024);
+        }
     }
+    else
+        ans = fopen(pp, mode);
+    free(pp);
     dbg_printf(" = %p\n", ans);
     if(!ans)
         return 0;
@@ -1024,7 +1044,7 @@ int impl_gethostname(char* tgt, int l)
 int impl_fclose(FILE* f)
 {
     FILE** fp = (FILE**)f;
-    int ans = fclose(*fp);
+    int ans = (*fp == log_handle) ? 0 : fclose(*fp);
     *fp = 0;
     resource_free(f);
     return ans;
@@ -1052,7 +1072,10 @@ ssize_t impl_fwrite(const void* data, size_t sz, size_t nmemb, FILE* f)
         popen_write(data, sz*nmemb);
         return nmemb;
     }
-    return fwrite(data, sz, nmemb, *(FILE**)f);
+    ssize_t ans = fwrite(data, sz, nmemb, *(FILE**)f);
+    if(*(FILE**)f == log_handle)
+        fwrite(data, sz, nmemb, stdout);
+    return ans;
 }
 
 DIR* impl_opendir(const char* path)
