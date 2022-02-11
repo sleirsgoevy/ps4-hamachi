@@ -6,9 +6,13 @@ asm("stub_entry:\npop %rdi\njmp stub");
 
 void stub_entry(void);
 
+extern FILE* log_handle;
+
 void stub(unsigned char* it)
 {
     printf("FATAL: %s stub called!\n", it+19);
+    if(log_handle)
+        fprintf(log_handle, "FATAL: %s stub called!\n", it+19);
     abort();
 }
 

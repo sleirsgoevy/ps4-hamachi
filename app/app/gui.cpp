@@ -98,20 +98,36 @@ static void drawSquare(int x, int y)
         }
 }
 
+static void drawOptionsButton(int x, int y)
+{
+    Color gray = {64, 64, 64};
+    for(int i = 0; i < 15; i++)
+        for(int j = 0; j < 30; j++)
+        {
+            int ii = (i >= 7 ? 14 - i : i);
+            int jj = (j >= 15 ? 29 - j : j);
+            if(ii >= 5 || jj >= 5 || (ii - 5) * (ii - 5) + (jj - 5) * (jj - 5) < 25)
+                scene->DrawPixel(x + i, y + j + 10, gray);
+        }
+}
+
 static void drawNetworkListToolbox()
 {
     Color white = {255, 255, 255};
     Color black = {0, 0, 0};
-    int w1, h1, w2, h2, w3, h3;
+    int w1, h1, w2, h2, w3, h3, w4, h4;
     scene->GetTextDimensions((char*)"Create network", face, w1, h1);
     scene->GetTextDimensions((char*)"Connect to network", face, w2, h2);
     scene->GetTextDimensions((char*)"Leave network", face, w3, h3);
+    scene->GetTextDimensions((char*)"Dump logs to USB", face, w4, h4);
     drawTriangle(0, 1030);
     scene->DrawText((char*)"Create network", face, 50, 1065, white, black);
     drawSquare(100 + w1, 1030);
     scene->DrawText((char*)"Connect to network", face, 150 + w1, 1065, white, black);
     drawCircle(200 + w1 + w2, 1030);
     scene->DrawText((char*)"Leave network", face, 250 + w1 + w2, 1065, white, black);
+    drawOptionsButton(300 + w1 + w2 + w3, 1030);
+    scene->DrawText((char*)"Dump logs to USB", face, 330 + w1 + w2 + w3, 1065, white, black);
 }
 
 static unsigned int pollPad()
@@ -264,10 +280,10 @@ extern "C" void gui_show_error_screen(const char* message)
     for(;;)
     {
         drawError(message);
+        flip();
         unsigned int keys = pollPad();
         if((keys & ORBIS_PAD_BUTTON_OPTIONS))
             doDumpLogs();
-        flip();
     }
 }
 
@@ -323,6 +339,8 @@ extern "C" void gui_show_network_list(const char** networks, int net_cnt, int* c
                 *action = 2;
                 return;
             }
+            else if((keys & ORBIS_PAD_BUTTON_OPTIONS))
+                doDumpLogs();
         }
     }
     if(*cur_net >= net_cnt)
@@ -359,6 +377,8 @@ extern "C" void gui_show_network_list(const char** networks, int net_cnt, int* c
             *action = 3;
             return;
         }
+        else if((keys & ORBIS_PAD_BUTTON_OPTIONS))
+            doDumpLogs();
     }
 }
 

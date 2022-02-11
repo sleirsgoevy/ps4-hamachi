@@ -28,7 +28,7 @@ extern FILE* stdout;
 extern FILE* stderr;
 
 #ifdef DEBUG_PRINTS
-#define dbg_printf printf
+#define dbg_printf(...) do { printf(__VA_ARGS__); if(log_handle) fprintf(log_handle, __VA_ARGS__); } while(0)
 #else
 #define dbg_printf(...)
 #endif
@@ -46,7 +46,7 @@ struct atexit_cb
 };
 
 __thread int is_main_thread;
-static FILE* log_handle;
+FILE* log_handle;
 const char* log_path = PREFIX "/var/lib/logmein-hamachi/h2-engine.log";
 
 int impl___cxa_atexit(void(*f)(void*), void* o, void* d)
@@ -528,9 +528,10 @@ int impl_epoll_wait(int fd, struct linux_epoll_event* ee, int maxevents, int tim
     if(tun_fd >= 0 && FD_ISSET(tun_fd, &r) && tuntap_has_fake_pkt())
     {
         ts.tv_sec = ts.tv_usec = 0;
+        timeout = 0;
         need_fake = 1;
     }
-    int nfds = select(FD_SETSIZE, &r, &w, &x, &ts);
+    int nfds = select(FD_SETSIZE, &r, &w, &x, timeout == -1 ? NULL : &ts);
     //printf("nfds = %d, errno = %d\n", nfds, errno);
     if(nfds < 0)
         return -1;
@@ -899,7 +900,10 @@ int impl_getaddrinfo(const char* node, const char* service, const struct linux_a
     bsd_hints.ai_socktype = hints->ai_socktype;
     bsd_hints.ai_protocol = hints->ai_protocol;
     struct host_addrinfo* bsd_res = 0;
+    //install_signal_handler();
+    //set_rflags(258);
     int ans = getaddrinfo(node, service, (struct addrinfo*)&bsd_hints, (struct addrinfo**)&bsd_res);
+    //set_rflags(2);
     dbg_printf("res=%d errno=%d\n", ans, errno);
     if(bsd_res)
     {

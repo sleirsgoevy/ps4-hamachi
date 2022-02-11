@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <pthread.h>
 #include <sys/file.h>
 #include <sys/time.h>
@@ -98,12 +99,16 @@ extern char impl_fread[];
 extern char impl_fwrite[];
 extern char impl_opendir[];
 extern char impl_strdup[];
+extern char __ctype_b_loc[];
+extern char __ctype_tolower_loc[];
 void empty(){}
 unsigned long long zero = 0;
 
 FILE** p_stdout = &stdout;
 
 struct symbol_desc symbols[] = {
+    {"__ctype_b_loc", __ctype_b_loc, 1},
+    {"__ctype_tolower_loc", __ctype_tolower_loc, 1},
     {"__cxa_atexit", impl___cxa_atexit, 1},
     {"__errno_location", impl___errno_location, 1},
     {"__fprintf_chk", impl___fprintf_chk, 1},
@@ -155,6 +160,7 @@ struct symbol_desc symbols[] = {
     {"inet_addr", inet_addr, 1},
     {"inet_ntop", inet_ntop, 1},
     {"ioctl", impl_ioctl, 1},
+    {"isspace", isspace, 1},
     {"listen", listen, 1},
     {"localtime", impl_localtime, 1},
     {"malloc", impl_malloc, 1},
@@ -210,6 +216,7 @@ struct symbol_desc symbols[] = {
     {"strtol", strtol, 1},
     {"system", impl_system, 1},
     {"time", time, 1},
+    {"tolower", tolower, 1},
     {"uname", impl_uname, 1},
     {"unlink", impl_unlink, 1},
     {"usleep", usleep, 1},

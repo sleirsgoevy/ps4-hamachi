@@ -67,7 +67,7 @@ int main(int argc, const char** argv)
     if(init_daemon())
     {
         gui_init();
-        gui_show_error_screen("Privilege escalation failed. Make sure you are running Mira, not just HEN."); //noreturn
+        gui_show_error_screen("Privilege escalation failed."); //noreturn
     }
     gui_init();
     void* buf = 0;
