@@ -101,11 +101,13 @@ extern char impl_opendir[];
 extern char impl_strdup[];
 extern char __ctype_b_loc[];
 extern char __ctype_tolower_loc[];
+extern char impl_getpeername[];
 void empty(){}
 unsigned long long zero = 0;
 
 FILE** p_stdout = &stdout;
 
+//NOTE: this list must be sorted in ASCII order!
 struct symbol_desc symbols[] = {
     {"__ctype_b_loc", __ctype_b_loc, 1},
     {"__ctype_tolower_loc", __ctype_tolower_loc, 1},
@@ -151,6 +153,7 @@ struct symbol_desc symbols[] = {
     {"gethostname", impl_gethostname, 1},
     {"getopt", impl_getopt, 1},
     {"getpid", getpid, 1},
+    {"getpeername", impl_getpeername, 1},
     {"getsockname", impl_getsockname, 1},
     {"getsockopt", impl_getsockopt, 1},
     {"gettimeofday", gettimeofday, 1},
@@ -185,6 +188,7 @@ struct symbol_desc symbols[] = {
     {"pthread_create", pthread_create, 1},
     {"pthread_exit", pthread_exit, 1},
     {"pthread_mutex_init", impl_pthread_mutex_init, 1},
+    {"pthread_mutex_lock", pthread_mutex_lock, 1},
     {"puts", puts, 1},
     {"qsort", qsort, 1},
     {"rand", rand, 1},

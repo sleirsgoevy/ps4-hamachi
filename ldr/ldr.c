@@ -151,10 +151,9 @@ int load_elf(const char* path, unsigned long long* entry)
         unsigned long long name = strtab + *(unsigned int*)sym;
         //printf("%016llx %016llx %016llx %s\n", a, b, c, (char*)name);
         unsigned int kind = (unsigned int)b;
-        if(kind == 6);
-        else if(kind == 5)
+        if(kind == 5)
             *(void**)a = lookup_data((const char*)name, (void*)a);
-        else if(kind == 7)
+        else if(kind == 6 || kind == 7)
             *(void**)a = lookup_function((const char*)name);
         else
         {

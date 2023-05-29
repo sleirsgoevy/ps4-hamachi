@@ -66,11 +66,11 @@ SECTIONS
 	}
 
 	.data : {
-		*(.data)
+		*(.data) *(.data.*)
 	}
 
 	.bss : {
-		*(.bss)
+		*(.bss) *(.bss.*)
 	}
 
 	# Force .got.plt to appear, because SPRX requires a valid .got.plt.

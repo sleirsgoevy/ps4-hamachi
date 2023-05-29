@@ -939,6 +939,20 @@ int impl_getsockname(int sock, struct linux_sockaddr* addr, socklen_t* addrlen)
     return ans;
 }
 
+int impl_getpeername(int sock, struct linux_sockaddr* addr, socklen_t* addrlen)
+{
+    union bsd_addr b_addr;
+    socklen_t sz = sizeof(b_addr);
+    int ans = getpeername(sock, &b_addr.addr, &sz);
+    union linux_addr l_addr;
+    bsd_addr_to_linux_addr(&b_addr.addr, &l_addr, &sz, "getpeername");
+    if(sz > *addrlen)
+        sz = *addrlen;
+    *addrlen = sz;
+    memcpy(addr, &l_addr, sz);
+    return ans;
+}
+
 /*void translate_sockopt(int* l, int* o)
 {
     int level = *l;
@@ -968,6 +982,7 @@ int impl_setsockopt(int sockfd, int level, int optname, const void* optval, sock
 int impl_getsockopt(int sockfd, int level, int optname, void* optval, socklen_t* optlen)
 {
     dbg_printf("getsockopt(%d, %d, %d, %p, %d)\n", sockfd, level, optname, optval, optlen);
+    memset(optval, 0, *optlen);
     return 0;
 }
 
