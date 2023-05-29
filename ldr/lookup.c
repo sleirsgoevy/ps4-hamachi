@@ -116,6 +116,7 @@ struct symbol_desc symbols[] = {
     {"__fprintf_chk", impl___fprintf_chk, 1},
     {"__fxstat", impl___fxstat64, 1}, // same on x86_64
     {"__fxstat64", impl___fxstat64, 1},
+    {"__gmon_start__", 0, 1},
     {"__libc_start_main", impl___libc_start_main, 1},
     {"__memcpy_chk", impl___memcpy_chk, 1},
     {"__printf_chk", impl___printf_chk, 1},
